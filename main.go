@@ -23,6 +23,7 @@ func main() {
 			application.NewService(cfg),
 			application.NewService(services.NewModsService(cfg)),
 			application.NewService(services.NewBackupService(cfg)),
+			application.NewService(services.NewExceptionService(cfg)),
 			application.NewService(services.NewUpdateService()),
 		},
 		Assets: application.AssetOptions{
