@@ -78,6 +78,28 @@ type Progress struct {
 	Label string `json:"label"`
 }
 
+// Exception is the last script error the game wrote out, with the mods the
+// traceback points at already pulled out.
+type Exception struct {
+	Found    bool      `json:"found"`
+	File     string    `json:"file"`
+	When     string    `json:"when"`
+	Build    string    `json:"build"`
+	Message  string    `json:"message"`
+	Trace    []string  `json:"trace"`
+	Suspects []Suspect `json:"suspects"`
+}
+
+// Suspect is one mod a traceback line points at. ID stays empty when the path
+// belongs to something no longer installed.
+type Suspect struct {
+	ID    string `json:"id"`
+	Label string `json:"label"`
+	Path  string `json:"path"`
+	Line  int    `json:"line"`
+	Why   string `json:"why"`
+}
+
 // InstallRequest describes a file the user dropped in.
 type InstallRequest struct {
 	Source  string `json:"source"`
