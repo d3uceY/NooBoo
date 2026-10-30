@@ -9,7 +9,7 @@ NooBoo is a Wails v3 desktop app: a Go backend that owns every file operation, a
 | **Library** | Lists every mod and CC pack, toggles them, opens a folder, removes a mod | Renames files, moves removed mods to quarantine |
 | **Install** | Copies a downloaded `.package`, `.ts4script` or `.zip` into `Mods/<name>/` | Creates folders, copies files, may back up first |
 | **Backups** | Snapshots `saves` + `Tray`, restores, deletes, manages storage | Copies, moves, deletes your own snapshots |
-| **Fix** | Disables many mods at once so you can bisect a broken game | Renames files |
+| **Fix** | Disables many mods at once so you can bisect a broken game; reads the game's own error log | Renames files, reads `lastException.txt` |
 | **About** | Version, credits, and whether a newer release exists | Nothing |
 
 ## How it connects
@@ -45,6 +45,16 @@ Picking the wrong level is common, so validation retries against `root/The Sims 
 The engine only loads `.package` and `.ts4script`. Disabling renames to `.package.off`; enabling strips the suffix. Nothing moves, so a mod folder keeps its shape and the state survives a rescan.
 
 `Mods/<Name>/` is read as a mod. `Mods/<Creator>/<Name>/` is read as CC. A mod counts as enabled when at least one of its files still has a loadable extension.
+
+### The last error
+
+The game writes every script error to `lastException.txt` in its own folder, in a format meant for a parser: a `<report>` block with `createtime`, `buildsignature`, a `categoryid` that is often an unclosed `desync://` URL, and a `<desyncdata>` blob holding the traceback with `&#13;&#10;` for line breaks. One file can hold several reports.
+
+NooBoo reads it as text, not as strict XML, because several of those tags do not nest. It takes the newest report, prefers the engine's own `j[mal|g] …` summary line over the exception type at the end, and cuts the install path off each frame so a line fits on screen.
+
+Matching happens in two passes. A frame whose path sits under `Mods` is a direct hit, so the folder name becomes the suspect. If the log was written somewhere else — a moved folder, a OneDrive redirect — the suspect is matched by folder name instead. Frames under `T:\InGame` or `Game\Bin` are the engine's own code and are ignored, which is why an all-game stack blames nobody and says so.
+
+No network is involved. There is no community compatibility list behind this and no update lookup for a package file; the answer comes only from what the log says.
 
 ### Installing
 
