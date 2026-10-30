@@ -23,13 +23,13 @@ Every release ships a `SHA256SUMS.txt`. The app checks for a newer stable releas
 
 ## What it does
 
-**Library.** Your mods and CC in one list. A switch turns one off or on, and hovering a row gives you its folder or removes it. Removed mods go to quarantine, not the bin.
+**Library.** Mods and CC in one list. Switch off or on, open the folder, or remove. Removed mods go to quarantine.
 
-**Install.** Pick a `.package`, `.ts4script`, `.zip`, or a whole folder. It lands in `Mods/<name>/`, and CC is filed under its creator. The backup checkbox is on by default.
+**Install.** Pick a `.package`, `.ts4script`, `.zip`, or folder. Files land in `Mods/<name>/`; CC is filed under its creator. Backup is on by default.
 
-**Backups.** Snapshots of `saves` and `Tray` whenever you want, and before every install. Restoring moves your current saves aside instead of overwriting them. Keeps the last ten, and you can change that.
+**Backups.** Snapshots of `saves` and `Tray`, on demand and before every install. Restoring moves current saves aside. Keeps the last ten (configurable).
 
-**Fix.** Tick half your mods and switch them off, launch the game, repeat until it boots. Off mods are renamed (`.package` becomes `.package.off`), so nothing moves and nothing is lost. Above the list, NooBoo reads the game's own `lastException.txt` and names the mod its stack points at, with a button to switch just that one off.
+**Fix.** Switch off half your mods, launch, repeat until the game boots. Off mods are renamed (`.package` becomes `.package.off`). NooBoo also reads `lastException.txt`, names the mod its stack points at, and can switch just that one off.
 
 <table>
 <tr>
