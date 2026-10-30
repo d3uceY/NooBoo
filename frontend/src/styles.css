@@ -1,0 +1,71 @@
+@import "tailwindcss";
+@import "@fontsource-variable/baloo-2";
+@import "@fontsource-variable/nunito";
+
+@theme {
+  --font-display: "Baloo 2 Variable", ui-rounded, system-ui, sans-serif;
+  --font-sans: "Nunito Variable", system-ui, sans-serif;
+
+  --color-plumbob: #7ac943;
+  --color-plumbob-dark: #4e9421;
+  --color-plumbob-soft: #e9f7d9;
+  --color-panel: #ffffff;
+  --color-panel-dim: #eaf4fb;
+  --color-ink: #1b3a52;
+  --color-ink-soft: #5b7a91;
+  --color-sky: #2e9fe6;
+  --color-sky-deep: #1d5c96;
+  --color-danger: #e2574c;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    color: var(--color-ink);
+    background:
+      radial-gradient(1100px 520px at 15% -12%, #ffffff 0%, transparent 62%),
+      linear-gradient(165deg, #dceefb 0%, #cfe6f7 42%, #eef7fd 100%);
+    background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+
+  ::selection {
+    background: var(--color-plumbob);
+    color: #16321f;
+  }
+}
+
+@layer utilities {
+  .scroll-soft {
+    scrollbar-width: thin;
+    scrollbar-color: #b7d4e6 transparent;
+  }
+
+  .plumbob-spin {
+    animation: plumbob-idle 5.5s ease-in-out infinite;
+  }
+
+  @keyframes plumbob-idle {
+    0%,
+    100% {
+      transform: translateY(0) rotate(-4deg);
+    }
+    50% {
+      transform: translateY(-3px) rotate(4deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .plumbob-spin {
+      animation: none;
+    }
+  }
+}
