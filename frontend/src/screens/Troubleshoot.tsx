@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type { Mod } from '../lib/api'
 import { bytes } from '../lib/format'
 import { Button, Panel, PanelHeader } from '../ui'
+import { LastError } from './LastError'
 
 interface Props {
   mods: Mod[]
@@ -41,11 +42,18 @@ export default function Troubleshoot({ mods, onToggle }: Props) {
   }
 
   if (!mods.length) {
-    return <p className="mt-16 text-center text-sm text-ink-soft">No mods yet.</p>
+    return (
+      <div className="w-[min(720px,100%)]">
+        <LastError mods={mods} onToggle={onToggle} />
+        <p className="mt-10 text-center text-sm text-ink-soft">No mods yet.</p>
+      </div>
+    )
   }
 
   return (
     <div className="w-[min(720px,100%)]">
+      <LastError mods={mods} onToggle={onToggle} />
+
       <div className="mb-4 rounded-xl border border-[#bcdcef] bg-panel-dim px-4 py-3">
         <p className="text-sm">
           Switch off half your mods, launch the game, and keep halving until it works. Disabled mods
