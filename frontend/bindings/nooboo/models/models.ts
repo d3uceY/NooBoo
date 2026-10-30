@@ -98,6 +98,63 @@ export class Config {
 }
 
 /**
+ * Exception is the last script error the game wrote out, with the mods the
+ * traceback points at already pulled out.
+ */
+export class Exception {
+    "found": boolean;
+    "file": string;
+    "when": string;
+    "build": string;
+    "message": string;
+    "trace": string[];
+    "suspects": Suspect[];
+
+    /** Creates a new Exception instance. */
+    constructor($$source: Partial<Exception> = {}) {
+        if (!("found" in $$source)) {
+            this["found"] = false;
+        }
+        if (!("file" in $$source)) {
+            this["file"] = "";
+        }
+        if (!("when" in $$source)) {
+            this["when"] = "";
+        }
+        if (!("build" in $$source)) {
+            this["build"] = "";
+        }
+        if (!("message" in $$source)) {
+            this["message"] = "";
+        }
+        if (!("trace" in $$source)) {
+            this["trace"] = [];
+        }
+        if (!("suspects" in $$source)) {
+            this["suspects"] = [];
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new Exception instance from a string or object.
+     */
+    static createFrom($$source: any = {}): Exception {
+        const $$createField5_0 = $$createType0;
+        const $$createField6_0 = $$createType2;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("trace" in $$parsedSource) {
+            $$parsedSource["trace"] = $$createField5_0($$parsedSource["trace"]);
+        }
+        if ("suspects" in $$parsedSource) {
+            $$parsedSource["suspects"] = $$createField6_0($$parsedSource["suspects"]);
+        }
+        return new Exception($$parsedSource as Partial<Exception>);
+    }
+}
+
+/**
  * GameFolder is the result of validating a folder the user picked.
  */
 export class GameFolder {
@@ -328,6 +385,47 @@ export class Storage {
 }
 
 /**
+ * Suspect is one mod a traceback line points at. ID stays empty when the path
+ * belongs to something no longer installed.
+ */
+export class Suspect {
+    "id": string;
+    "label": string;
+    "path": string;
+    "line": number;
+    "why": string;
+
+    /** Creates a new Suspect instance. */
+    constructor($$source: Partial<Suspect> = {}) {
+        if (!("id" in $$source)) {
+            this["id"] = "";
+        }
+        if (!("label" in $$source)) {
+            this["label"] = "";
+        }
+        if (!("path" in $$source)) {
+            this["path"] = "";
+        }
+        if (!("line" in $$source)) {
+            this["line"] = 0;
+        }
+        if (!("why" in $$source)) {
+            this["why"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new Suspect instance from a string or object.
+     */
+    static createFrom($$source: any = {}): Suspect {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new Suspect($$parsedSource as Partial<Suspect>);
+    }
+}
+
+/**
  * UpdateInfo is the result of asking GitHub for the newest stable release.
  */
 export class UpdateInfo {
@@ -369,3 +467,5 @@ export class UpdateInfo {
 
 // Private type creation functions
 const $$createType0 = $Create.Array($Create.Any);
+const $$createType1 = Suspect.createFrom;
+const $$createType2 = $Create.Array($$createType1);
