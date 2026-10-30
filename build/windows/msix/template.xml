@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MsixPackagingToolTemplate
+    xmlns="http://schemas.microsoft.com/msix/packaging/msixpackagingtool/template/2022">
+    <Settings
+        AllowTelemetry="false"
+        ApplyACLsToPackageFiles="true"
+        GenerateCommandLineFile="true"
+        AllowPromptForPassword="false">
+    </Settings>
+    <Installer
+        Path="nooboo.exe"
+        Arguments=""
+        InstallLocation="C:\Program Files\NooBoo\NooBoo">
+    </Installer>
+    <PackageInformation
+        PackageName="NooBoo"
+        PackageDisplayName="NooBoo"
+        PublisherName="CN=NooBoo"
+        PublisherDisplayName="NooBoo"
+        Version="0.1.0.0"
+        PackageDescription="The Sims 4 mod manager">
+        <Capabilities>
+            <Capability Name="runFullTrust" />
+            
+        </Capabilities>
+        <Applications>
+            <Application
+                Id="com.nooboo.app"
+                Description="The Sims 4 mod manager"
+                DisplayName="NooBoo"
+                ExecutableName="nooboo.exe"
+                EntryPoint="Windows.FullTrustApplication">
+                
+            </Application>
+        </Applications>
+        <Resources>
+            <Resource Language="en-us" />
+        </Resources>
+        <Dependencies>
+            <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19041.0" />
+        </Dependencies>
+        <Properties>
+            <Framework>false</Framework>
+            <DisplayName>NooBoo</DisplayName>
+            <PublisherDisplayName>NooBoo</PublisherDisplayName>
+            <Description>The Sims 4 mod manager</Description>
+            <Logo>Assets\AppIcon.png</Logo>
+        </Properties>
+    </PackageInformation>
+    <SaveLocation PackagePath="nooboo.msix" />
+    <PackageIntegrity>
+        <CertificatePath></CertificatePath>
+    </PackageIntegrity>
+</MsixPackagingToolTemplate>
