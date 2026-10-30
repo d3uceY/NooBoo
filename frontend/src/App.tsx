@@ -16,7 +16,7 @@ const nav: { id: Screen; label: string; art: ArtName; title: string; hint: strin
   { id: 'library', label: 'Library', art: 'library', title: 'Library', hint: 'Everything in your Mods folder' },
   { id: 'install', label: 'Install', art: 'install', title: 'Install', hint: 'Add a downloaded mod or CC file' },
   { id: 'backups', label: 'Backups', art: 'backups', title: 'Backups', hint: 'Saves and Tray snapshots' },
-  { id: 'troubleshoot', label: 'Fix', art: 'fix', title: 'Troubleshoot', hint: 'Switch mods off to find the broken one' },
+  { id: 'troubleshoot', label: 'Fix', art: 'fix', title: 'Fix', hint: 'Switch mods off to find the broken one' },
   { id: 'about', label: 'About', art: 'mark', title: 'About', hint: 'Version, credits and updates' },
 ]
 
