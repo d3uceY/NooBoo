@@ -156,7 +156,7 @@ export default function App() {
         <header className="px-6 pt-5 pb-3">
           <h1 className="font-display text-[26px] leading-none font-bold">{current.title}</h1>
           <p className="mt-1 text-xs text-ink-soft">
-            {ready ? current.hint : 'Pick your Sims 4 folder to start'}
+            {ready || screen === 'about' ? current.hint : 'Pick your Sims 4 folder to start'}
           </p>
         </header>
 
@@ -169,7 +169,7 @@ export default function App() {
         <main ref={panel} className="scroll-soft flex-1 overflow-y-auto px-6 pb-4">
           {folder === null ? (
             <p className="mt-16 text-center text-sm text-ink-soft">Loading…</p>
-          ) : !ready ? (
+          ) : !ready && screen !== 'about' ? (
             <Setup folder={folder} onPick={pickFolder} />
           ) : screen === 'library' ? (
             <Library
