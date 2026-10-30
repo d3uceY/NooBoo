@@ -1,11 +1,12 @@
 import { Events } from '@wailsio/runtime'
 import * as BackupService from '../../bindings/nooboo/services/backupservice'
 import * as ConfigService from '../../bindings/nooboo/services/configservice'
+import * as ExceptionService from '../../bindings/nooboo/services/exceptionservice'
 import * as ModsService from '../../bindings/nooboo/services/modsservice'
 import * as UpdateService from '../../bindings/nooboo/services/updateservice'
-import type { AppInfo, Backup, GameFolder, Mod, Progress, Storage, UpdateInfo } from '../../bindings/nooboo/models/models'
+import type { AppInfo, Backup, Exception, GameFolder, Mod, Progress, Storage, UpdateInfo } from '../../bindings/nooboo/models/models'
 
-export type { AppInfo, Backup, GameFolder, Mod, Progress, Storage, UpdateInfo }
+export type { AppInfo, Backup, Exception, GameFolder, Mod, Progress, Storage, UpdateInfo }
 
 export type Kind = 'mod' | 'cc'
 
@@ -47,6 +48,9 @@ export const api = {
   backupStorage: () => BackupService.Storage() as unknown as Promise<Storage>,
   emptyQuarantine: () => BackupService.EmptyQuarantine() as unknown as Promise<void>,
   revealBackups: () => BackupService.Reveal() as unknown as Promise<void>,
+
+  lastException: () => ExceptionService.Latest() as unknown as Promise<Exception>,
+  openException: () => ExceptionService.Open() as unknown as Promise<void>,
 
   /** Subscribe to file-work progress. Returns an unsubscribe function. */
   onProgress: (cb: (p: Progress) => void) =>
