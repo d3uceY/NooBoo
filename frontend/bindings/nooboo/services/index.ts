@@ -3,11 +3,13 @@
 
 import * as BackupService from "./backupservice.js";
 import * as ConfigService from "./configservice.js";
+import * as ExceptionService from "./exceptionservice.js";
 import * as ModsService from "./modsservice.js";
 import * as UpdateService from "./updateservice.js";
 export {
     BackupService,
     ConfigService,
+    ExceptionService,
     ModsService,
     UpdateService
 };
