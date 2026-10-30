@@ -4,9 +4,9 @@ import * as ConfigService from '../../bindings/nooboo/services/configservice'
 import * as ExceptionService from '../../bindings/nooboo/services/exceptionservice'
 import * as ModsService from '../../bindings/nooboo/services/modsservice'
 import * as UpdateService from '../../bindings/nooboo/services/updateservice'
-import type { AppInfo, Backup, Exception, GameFolder, Mod, Progress, Storage, UpdateInfo } from '../../bindings/nooboo/models/models'
+import type { AppInfo, Backup, Exception, GameFolder, Mod, Progress, Storage, TidyResult, UpdateInfo } from '../../bindings/nooboo/models/models'
 
-export type { AppInfo, Backup, Exception, GameFolder, Mod, Progress, Storage, UpdateInfo }
+export type { AppInfo, Backup, Exception, GameFolder, Mod, Progress, Storage, TidyResult, UpdateInfo }
 
 export type Kind = 'mod' | 'cc'
 
@@ -38,8 +38,10 @@ export const api = {
   setEnabled: (ids: string[], enabled: boolean) =>
     ModsService.SetEnabled(ids, enabled) as unknown as Promise<void>,
   pickFile: () => ModsService.PickFile() as unknown as Promise<string>,
+  pickFolder: () => ModsService.PickFolder() as unknown as Promise<string>,
   install: (req: InstallRequest) => ModsService.Install(req as never) as unknown as Promise<Mod>,
   deleteMod: (id: string) => ModsService.Delete(id) as unknown as Promise<void>,
+  tidy: () => ModsService.Tidy() as unknown as Promise<TidyResult>,
 
   backups: () => BackupService.List() as unknown as Promise<Backup[]>,
   backupNow: () => BackupService.BackupNow() as unknown as Promise<Backup>,

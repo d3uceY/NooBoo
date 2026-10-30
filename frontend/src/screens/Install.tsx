@@ -13,14 +13,14 @@ export default function Install({ onDone }: { onDone: () => Promise<void> }) {
   const [error, setError] = useState('')
   const [done, setDone] = useState('')
 
-  const pick = async () => {
+  const pick = async (kindOfPick: 'file' | 'folder') => {
     setError('')
     setDone('')
     try {
-      const file = await api.pickFile()
-      if (!file) return
-      setSource(file)
-      const base = file.split(/[\\/]/).pop() ?? ''
+      const picked = kindOfPick === 'file' ? await api.pickFile() : await api.pickFolder()
+      if (!picked) return
+      setSource(picked)
+      const base = picked.split(/[\\/]/).filter(Boolean).pop() ?? ''
       setName(base.replace(/\.(package|ts4script|zip)$/i, ''))
     } catch (e) {
       setError(message(e))
@@ -48,14 +48,15 @@ export default function Install({ onDone }: { onDone: () => Promise<void> }) {
 
   return (
     <Panel className="w-[min(560px,100%)]">
-      <PanelHeader title="Add a file" hint=".package, .ts4script or .zip" />
+      <PanelHeader title="Add a file" hint=".package, .ts4script, .zip or a folder" />
       <div className="space-y-4 px-4 py-4">
         <div>
-          <span className="mb-1 block text-[11px] font-semibold text-ink-soft">File</span>
+          <span className="mb-1 block text-[11px] font-semibold text-ink-soft">File or folder</span>
           <div className="flex items-center gap-2">
-            <Button variant="blue" onClick={pick}>
+            <Button variant="blue" onClick={() => pick('file')}>
               Pick file
             </Button>
+            <Button onClick={() => pick('folder')}>Pick folder</Button>
             <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-ink-soft">
               {source || 'Nothing chosen'}
             </span>
@@ -123,16 +124,18 @@ function KindButton({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`flex flex-1 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-left transition-colors ${
+      className={`flex flex-1 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-left transition-colors focus-visible:ring-2 focus-visible:ring-sky/60 focus-visible:outline-none ${
         active
-          ? 'border-[#3f7a17] bg-plumbob-soft shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]'
+          ? 'border-[#3f7a17] bg-linear-to-b from-[#8ed94f] to-[#57a52a] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_2px_5px_rgba(20,50,70,0.2)]'
           : 'border-[#c3d8e6] bg-white hover:border-[#8dbfe0]'
       }`}
     >
       <Art name={art} size={22} />
       <span className="min-w-0">
         <span className="block font-display text-sm font-semibold">{label}</span>
-        <span className="block font-mono text-[10px] text-ink-soft">{hint}</span>
+        <span className={`block font-mono text-[10px] ${active ? 'text-white/80' : 'text-ink-soft'}`}>
+          {hint}
+        </span>
       </span>
     </button>
   )

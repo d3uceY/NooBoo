@@ -100,6 +100,19 @@ type Suspect struct {
 	Why   string `json:"why"`
 }
 
+// TidyMove is one loose file that moved into its own folder.
+type TidyMove struct {
+	File string `json:"file"`
+	Into string `json:"into"`
+}
+
+// TidyResult is what the tidy pass did, so the screen can say it out loud.
+type TidyResult struct {
+	Moved   []TidyMove `json:"moved"`
+	Folders int        `json:"folders"`
+	Skipped []string   `json:"skipped"`
+}
+
 // InstallRequest describes a file the user dropped in.
 type InstallRequest struct {
 	Source  string `json:"source"`

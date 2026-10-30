@@ -426,6 +426,74 @@ export class Suspect {
 }
 
 /**
+ * TidyMove is one loose file that moved into its own folder.
+ */
+export class TidyMove {
+    "file": string;
+    "into": string;
+
+    /** Creates a new TidyMove instance. */
+    constructor($$source: Partial<TidyMove> = {}) {
+        if (!("file" in $$source)) {
+            this["file"] = "";
+        }
+        if (!("into" in $$source)) {
+            this["into"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new TidyMove instance from a string or object.
+     */
+    static createFrom($$source: any = {}): TidyMove {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new TidyMove($$parsedSource as Partial<TidyMove>);
+    }
+}
+
+/**
+ * TidyResult is what the tidy pass did, so the screen can say it out loud.
+ */
+export class TidyResult {
+    "moved": TidyMove[];
+    "folders": number;
+    "skipped": string[];
+
+    /** Creates a new TidyResult instance. */
+    constructor($$source: Partial<TidyResult> = {}) {
+        if (!("moved" in $$source)) {
+            this["moved"] = [];
+        }
+        if (!("folders" in $$source)) {
+            this["folders"] = 0;
+        }
+        if (!("skipped" in $$source)) {
+            this["skipped"] = [];
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new TidyResult instance from a string or object.
+     */
+    static createFrom($$source: any = {}): TidyResult {
+        const $$createField0_0 = $$createType4;
+        const $$createField2_0 = $$createType0;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("moved" in $$parsedSource) {
+            $$parsedSource["moved"] = $$createField0_0($$parsedSource["moved"]);
+        }
+        if ("skipped" in $$parsedSource) {
+            $$parsedSource["skipped"] = $$createField2_0($$parsedSource["skipped"]);
+        }
+        return new TidyResult($$parsedSource as Partial<TidyResult>);
+    }
+}
+
+/**
  * UpdateInfo is the result of asking GitHub for the newest stable release.
  */
 export class UpdateInfo {
@@ -469,3 +537,5 @@ export class UpdateInfo {
 const $$createType0 = $Create.Array($Create.Any);
 const $$createType1 = Suspect.createFrom;
 const $$createType2 = $Create.Array($$createType1);
+const $$createType3 = TidyMove.createFrom;
+const $$createType4 = $Create.Array($$createType3);

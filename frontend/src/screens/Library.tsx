@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { Mod } from '../lib/api'
+import type { Mod, TidyResult } from '../lib/api'
 import { bytes, when } from '../lib/format'
 import { revealRows } from '../lib/motion'
 import { Button, Dialog, Field, Section, Switch } from '../ui'
@@ -8,14 +8,17 @@ interface Props {
   mods: Mod[]
   onToggle: (ids: string[], enabled: boolean) => Promise<void>
   onDelete: (id: string) => Promise<void>
+  onTidy: () => Promise<TidyResult>
   onReveal: (path: string) => void
 }
 
-export default function Library({ mods, onToggle, onDelete, onReveal }: Props) {
+export default function Library({ mods, onToggle, onDelete, onTidy, onReveal }: Props) {
   const [query, setQuery] = useState('')
   const [busy, setBusy] = useState('')
   const [removing, setRemoving] = useState<Mod | null>(null)
   const [detail, setDetail] = useState<Mod | null>(null)
+  const [tidying, setTidying] = useState(false)
+  const [tidyDone, setTidyDone] = useState<TidyResult | null>(null)
   const scope = useRef<HTMLDivElement>(null)
 
   const filtered = useMemo(() => {
@@ -30,6 +33,20 @@ export default function Library({ mods, onToggle, onDelete, onReveal }: Props) {
 
   const plain = filtered.filter((m) => m.kind === 'mod')
   const cc = filtered.filter((m) => m.kind === 'cc')
+  // A loose file is its own id and still carries a mod extension.
+  const loose = mods.filter((m) => /\.(package|ts4script)(\.off)?$/i.test(m.id))
+
+  const runTidy = async () => {
+    setTidying(false)
+    setBusy('tidy')
+    try {
+      setTidyDone(await onTidy())
+    } catch {
+      // App puts the reason in the banner above.
+    } finally {
+      setBusy('')
+    }
+  }
 
   const flip = async (mod: Mod, enabled: boolean) => {
     setBusy(mod.id)
@@ -69,11 +86,18 @@ export default function Library({ mods, onToggle, onDelete, onReveal }: Props) {
         <div className="w-full max-w-[320px]">
           <Field label="Search" value={query} onChange={setQuery} placeholder="Name or creator" />
         </div>
-        {query.trim() !== '' && (
-          <p className="shrink-0 pb-2 text-[11px] text-ink-soft">
-            {filtered.length} of {mods.length}
-          </p>
-        )}
+        <div className="flex shrink-0 items-center gap-3 pb-1">
+          {query.trim() !== '' && (
+            <p className="text-[11px] text-ink-soft">
+              {filtered.length} of {mods.length}
+            </p>
+          )}
+          {loose.length > 0 && (
+            <Button size="sm" variant="plain" disabled={busy !== ''} onClick={() => setTidying(true)}>
+              Tidy up {loose.length}
+            </Button>
+          )}
+        </div>
       </div>
 
       {filtered.length === 0 && <p className="mt-10 text-center text-sm text-ink-soft">No matches.</p>}
@@ -113,6 +137,62 @@ export default function Library({ mods, onToggle, onDelete, onReveal }: Props) {
           <span className="font-semibold">{removing?.name}</span> leaves your Mods folder and is kept
           under quarantine, so you can put it back.
         </p>
+      </Dialog>
+
+      <Dialog
+        open={tidying}
+        onClose={() => setTidying(false)}
+        title="Group loose files?"
+        footer={
+          <>
+            <Button variant="plain" onClick={() => setTidying(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={runTidy}>
+              Tidy up
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm">
+          {loose.length} files sit directly in Mods. Each gets a folder named after it, so a package
+          and its script switch together instead of separately. Names are left exactly as they are.
+        </p>
+      </Dialog>
+
+      <Dialog
+        open={tidyDone !== null}
+        onClose={() => setTidyDone(null)}
+        title="Tidied"
+        footer={
+          <Button variant="primary" onClick={() => setTidyDone(null)}>
+            Close
+          </Button>
+        }
+      >
+        {tidyDone && (
+          <>
+            <p className="text-sm">
+              {tidyDone.moved.length === 0
+                ? 'Nothing to move.'
+                : `${tidyDone.moved.length} files into ${tidyDone.folders} folders.`}
+            </p>
+            {tidyDone.moved.length > 0 && (
+              <ul className="scroll-soft mt-2 max-h-40 overflow-auto rounded-lg bg-panel-dim px-3 py-2 text-[11px] text-ink-soft">
+                {tidyDone.moved.map((m) => (
+                  <li key={m.file} className="truncate">
+                    {m.file} → {m.into}/
+                  </li>
+                ))}
+              </ul>
+            )}
+            {tidyDone.skipped.length > 0 && (
+              <p className="mt-2 text-[11px] text-ink-soft">
+                Left alone: {tidyDone.skipped.join(', ')}. Their name is already taken in Mods.
+              </p>
+            )}
+          </>
+        )}
       </Dialog>
 
       <Dialog

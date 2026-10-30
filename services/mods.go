@@ -46,6 +46,16 @@ func (m *ModsService) PickFile() (string, error) {
 		PromptForSingleSelection()
 }
 
+// PickFolder opens the native picker for an unpacked mod folder, for people who
+// downloaded a whole folder of packages instead of a single archive.
+func (m *ModsService) PickFolder() (string, error) {
+	return application.Get().Dialog.OpenFile().
+		CanChooseFiles(false).
+		CanChooseDirectories(true).
+		SetTitle("Choose a mod folder").
+		PromptForSingleSelection()
+}
+
 // Scan lists everything under Mods, one entry per installable folder.
 // No folder set yet reads as an empty library, not an error.
 func (m *ModsService) Scan() ([]models.Mod, error) {
@@ -74,7 +84,7 @@ func (m *ModsService) Scan() ([]models.Mod, error) {
 
 		if !e.IsDir() {
 			if isLoadable(name) || isDisabled(name) {
-				mods = append(mods, m.describe(full, strings.TrimSuffix(name, filepath.Ext(name)), "", models.KindMod))
+				mods = append(mods, m.describe(full, displayName(name), "", models.KindMod))
 			}
 			continue
 		}
@@ -208,19 +218,19 @@ func renameAll(root string, enabled bool) error {
 	return nil
 }
 
-// Install copies a downloaded file into place. Mods get their own folder;
-// custom content is grouped under the creator.
+// Install copies a download into place, from a file or a whole folder. Mods get
+// their own folder; custom content is grouped under the creator.
 func (m *ModsService) Install(req models.InstallRequest) (models.Mod, error) {
 	dir, err := m.dir()
 	if err != nil {
 		return models.Mod{}, err
 	}
 	info, err := os.Stat(req.Source)
-	if err != nil || info.IsDir() {
-		return models.Mod{}, errors.New("pick a .package, .ts4script or .zip file")
+	if err != nil {
+		return models.Mod{}, errors.New("pick a .package, .ts4script, .zip or a folder")
 	}
-	if !isLoadable(req.Source) && !strings.EqualFold(filepath.Ext(req.Source), ".zip") {
-		return models.Mod{}, errors.New("only .package, .ts4script and .zip are supported — extract .rar or .7z first")
+	if !info.IsDir() && !isLoadable(req.Source) && !strings.EqualFold(filepath.Ext(req.Source), ".zip") {
+		return models.Mod{}, errors.New("only .package, .ts4script, .zip and folders are supported — extract .rar or .7z first")
 	}
 
 	name := folderSafe(req.Name)
@@ -233,18 +243,138 @@ func (m *ModsService) Install(req models.InstallRequest) (models.Mod, error) {
 		return models.Mod{}, err
 	}
 
-	if strings.EqualFold(filepath.Ext(req.Source), ".zip") {
+	if info.IsDir() {
+		if err := copyModFiles(req.Source, dest); err != nil {
+			removeEmptyDir(dest)
+			return models.Mod{}, err
+		}
+	} else if strings.EqualFold(filepath.Ext(req.Source), ".zip") {
 		if err := extractZip(req.Source, dest); err != nil {
+			removeEmptyDir(dest)
 			return models.Mod{}, err
 		}
 	} else if err := copyFile(req.Source, filepath.Join(dest, filepath.Base(req.Source))); err != nil {
+		removeEmptyDir(dest)
 		return models.Mod{}, err
 	}
 
 	if !hasLoadableDirect(dest) {
+		removeEmptyDir(dest)
 		return models.Mod{}, fmt.Errorf("no .package or .ts4script inside %s", filepath.Base(req.Source))
 	}
 	return m.describe(dest, name, creator, req.Kind), nil
+}
+
+// copyModFiles copies everything the game loads out of a folder the user picked,
+// flattening subfolders so the result matches what a zip install produces.
+// Disabled files keep their suffix, so a folder of half-switched-off mods
+// arrives in the same state. A repeated file name keeps the shallowest copy.
+func copyModFiles(src, dst string) error {
+	taken := map[string]bool{}
+	return filepath.WalkDir(src, func(p string, d os.DirEntry, err error) error {
+		if err != nil {
+			return nil
+		}
+		if d.IsDir() {
+			if p != src && strings.HasPrefix(d.Name(), ".") {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		name := d.Name()
+		if !isLoadable(name) && !isDisabled(name) {
+			return nil
+		}
+		if taken[name] {
+			return nil
+		}
+		taken[name] = true
+		return copyFile(p, filepath.Join(dst, name))
+	})
+}
+
+// removeEmptyDir clears the folder Install made when the copy failed or the
+// archive held nothing the game loads, so a failed install leaves no litter.
+func removeEmptyDir(dir string) {
+	entries, err := os.ReadDir(dir)
+	if err != nil || len(entries) > 0 {
+		return
+	}
+	_ = os.Remove(dir)
+}
+
+// Tidy moves loose files in Mods into a folder of their own, the same shape
+// Install already produces. Files that share a stem land together, so a package
+// and its ts4script get one switch instead of two. Names keep their `!` or
+// `[bracket]` prefix and their Creator_Item underscores, because that is how the
+// player sorted them by hand.
+func (m *ModsService) Tidy() (models.TidyResult, error) {
+	res := models.TidyResult{Moved: []models.TidyMove{}, Skipped: []string{}}
+	dir, err := m.dir()
+	if err != nil {
+		return res, err
+	}
+	entries, err := os.ReadDir(dir)
+	if errors.Is(err, os.ErrNotExist) {
+		return res, nil
+	}
+	if err != nil {
+		return res, err
+	}
+
+	folders := map[string]bool{}
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		name := e.Name()
+		if strings.HasPrefix(name, ".") || strings.EqualFold(name, "Resource.cfg") {
+			continue
+		}
+		if !isLoadable(name) && !isDisabled(name) {
+			continue
+		}
+
+		stem := strings.TrimSpace(displayName(name))
+		if stem == "" {
+			res.Skipped = append(res.Skipped, name)
+			continue
+		}
+		folder := folderSafe(stem)
+		target := filepath.Join(dir, folder)
+		if exists, isDir := statKind(target); exists {
+			// A folder holding only subfolders is a creator folder. Moving a file
+			// into it would turn the whole thing into one mod, so leave it be.
+			if !isDir || !hasLoadableDirect(target) {
+				res.Skipped = append(res.Skipped, name)
+				continue
+			}
+		}
+		dest := filepath.Join(target, name)
+		if fileExists(dest) {
+			res.Skipped = append(res.Skipped, name)
+			continue
+		}
+		if err := os.MkdirAll(target, 0o755); err != nil {
+			return res, err
+		}
+		if err := os.Rename(filepath.Join(dir, name), dest); err != nil {
+			return res, err
+		}
+		res.Moved = append(res.Moved, models.TidyMove{File: name, Into: folder})
+		folders[folder] = true
+	}
+	res.Folders = len(folders)
+	return res, nil
+}
+
+// statKind separates "gone" from "here, and a folder or not".
+func statKind(path string) (bool, bool) {
+	info, err := os.Stat(path)
+	if err != nil {
+		return false, false
+	}
+	return true, info.IsDir()
 }
 
 // Delete sets a mod aside in quarantine, so removing the wrong thing is
@@ -354,4 +484,14 @@ func isDisabled(name string) bool {
 		return false
 	}
 	return isLoadable(strings.TrimSuffix(lower, disabledSuffix))
+}
+
+// displayName is a loose file's name with the switch-off suffix and the real
+// extension gone, so "tool.package.off" reads as "tool".
+func displayName(name string) string {
+	base := name
+	if isDisabled(base) {
+		base = base[:len(base)-len(disabledSuffix)]
+	}
+	return strings.TrimSuffix(base, filepath.Ext(base))
 }

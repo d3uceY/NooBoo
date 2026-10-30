@@ -25,7 +25,7 @@ Every release ships a `SHA256SUMS.txt`. The app checks for a newer stable releas
 
 **Library.** Your mods and CC in one list. A switch turns one off or on, and hovering a row gives you its folder or removes it. Removed mods go to quarantine, not the bin.
 
-**Install.** Pick a `.package`, `.ts4script` or `.zip`. It lands in `Mods/<name>/`, and CC is filed under its creator. The backup checkbox is on by default.
+**Install.** Pick a `.package`, `.ts4script`, `.zip`, or a whole folder. It lands in `Mods/<name>/`, and CC is filed under its creator. The backup checkbox is on by default.
 
 **Backups.** Snapshots of `saves` and `Tray` whenever you want, and before every install. Restoring moves your current saves aside instead of overwriting them. Keeps the last ten, and you can change that.
 

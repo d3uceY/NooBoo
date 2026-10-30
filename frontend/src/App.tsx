@@ -121,6 +121,18 @@ export default function App() {
     }
   }
 
+  const tidy = async () => {
+    setError('')
+    try {
+      const res = await api.tidy()
+      await refresh()
+      return res
+    } catch (e) {
+      setError(message(e))
+      throw e
+    }
+  }
+
   const ready = folder?.valid === true
   const current = nav.find((n) => n.id === screen) ?? nav[0]
   const enabledCount = mods.filter((m) => m.enabled).length
@@ -176,6 +188,7 @@ export default function App() {
               mods={mods}
               onToggle={toggle}
               onDelete={removeMod}
+              onTidy={tidy}
               onReveal={(p) => void api.reveal(p)}
             />
           ) : screen === 'install' ? (

@@ -41,6 +41,16 @@ go vet ./models/... ./services/... .
 
 Tests run against a temporary folder — they never touch a real Sims 4 install. If you add behaviour that touches the player's files, add a test for it in `services/userflow_test.go`, written as the thing a player would actually do.
 
+## A fake game folder to click around in
+
+```powershell
+powershell -ExecutionPolicy Bypass -File build/scripts/make-test-folder.ps1
+```
+
+Builds `Documents\NooBoo Test Folder\The Sims 4` with saves, Tray, a real-shaped `lastException.txt`, and a Mods folder full of the awkward cases: loose files named with a `!` prefix, a `[bracket]` prefix, `Creator_Item`, a generic `package_02`, a package and ts4script pair, a switched-off file, a three-deep folder, a folder with nothing loadable in it, and `Resource.cfg` plus a readme that must stay unlisted. Sources for the Install screen sit in `downloads-to-install` next to it.
+
+It wipes and rebuilds the folder every run, so it is safe to break.
+
 ## Ground rules
 
 - **Never destroy player data.** Removing a mod moves it to quarantine. Restoring a save parks the current one. Anything irreversible needs a test proving the safe path.

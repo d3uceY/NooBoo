@@ -13,5 +13,7 @@ export {
     Progress,
     Storage,
     Suspect,
+    TidyMove,
+    TidyResult,
     UpdateInfo
 } from "./models.js";

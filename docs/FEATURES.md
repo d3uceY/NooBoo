@@ -56,13 +56,24 @@ Matching happens in two passes. A frame whose path sits under `Mods` is a direct
 
 No network is involved. There is no community compatibility list behind this and no update lookup for a package file; the answer comes only from what the log says.
 
+### Tidy up
+
+A player who drops files straight into `Mods` gets one row per file. `Tidy` (the small button beside the search box, shown only while loose files exist) moves each one into a folder named after it, which is the shape `Install` already writes.
+
+Files sharing a stem land in the same folder, so `WickedWhims.package` and `WickedWhims.ts4script` end up with one switch instead of two. The name is taken verbatim, which keeps the conventions players use by hand: `!MCCC` and `[Harrie] Cottage Garden` keep their prefixes, and `Creator_Item` becomes a `Creator_Item` folder. `.off` files move without being switched back on.
+
+Three things are left alone and reported: a file whose folder name already exists as a folder with no loadable files in it (a creator folder — moving in would collapse it into one mod), a file whose name is already taken inside the target folder, and anything that is not a `.package` or `.ts4script`. Nothing is deleted, so a wrong move is a drag back in Explorer.
+
 ### Installing
 
 ```
 .package / .ts4script   → Mods/<name>/file
 .zip                    → Mods/<name>/*.package (flattened, readme.txt dropped)
+folder                  → Mods/<name>/*.package (subfolders flattened, same rule)
 CC                      → Mods/<creator>/<name>/
 ```
+
+A folder source copies every `.package` and `.ts4script` inside it, however deep, flattening them into one folder so the game loads them. `.off` files keep their suffix, so a folder of half-switched-off mods arrives in the state it was in. A repeated file name keeps the shallowest copy rather than failing the install.
 
 Names pass through `folderSafe` to strip `\ / : * ? " < > |`. `.rar` and `.7z` are refused with a message rather than silently failing, because they need an external extractor.
 

@@ -23,8 +23,8 @@ export function Delete(id: string): $CancellablePromise<void> {
 }
 
 /**
- * Install copies a downloaded file into place. Mods get their own folder;
- * custom content is grouped under the creator.
+ * Install copies a download into place, from a file or a whole folder. Mods get
+ * their own folder; custom content is grouped under the creator.
  */
 export function Install(req: models$0.InstallRequest): $CancellablePromise<models$0.Mod> {
     return $Call.ByID(1261860985, req).then(($result: any) => {
@@ -37,6 +37,14 @@ export function Install(req: models$0.InstallRequest): $CancellablePromise<model
  */
 export function PickFile(): $CancellablePromise<string> {
     return $Call.ByID(1279752485);
+}
+
+/**
+ * PickFolder opens the native picker for an unpacked mod folder, for people who
+ * downloaded a whole folder of packages instead of a single archive.
+ */
+export function PickFolder(): $CancellablePromise<string> {
+    return $Call.ByID(402895183);
 }
 
 /**
@@ -56,6 +64,20 @@ export function SetEnabled(ids: string[], enabled: boolean): $CancellablePromise
     return $Call.ByID(2661027863, ids, enabled);
 }
 
+/**
+ * Tidy moves loose files in Mods into a folder of their own, the same shape
+ * Install already produces. Files that share a stem land together, so a package
+ * and its ts4script get one switch instead of two. Names keep their `!` or
+ * `[bracket]` prefix and their Creator_Item underscores, because that is how the
+ * player sorted them by hand.
+ */
+export function Tidy(): $CancellablePromise<models$0.TidyResult> {
+    return $Call.ByID(1151939098).then(($result: any) => {
+        return $$createType2($result);
+    });
+}
+
 // Private type creation functions
 const $$createType0 = models$0.Mod.createFrom;
 const $$createType1 = $Create.Array($$createType0);
+const $$createType2 = models$0.TidyResult.createFrom;
