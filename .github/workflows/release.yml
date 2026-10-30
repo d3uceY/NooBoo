@@ -67,6 +67,7 @@ jobs:
       - name: Build binary and .deb
         env:
           GOARCH: amd64
+          VERSION: ${{ needs.validate-tag.outputs.version }}
         run: wails3 task linux:create:deb
 
       - name: Collect Linux artifacts
@@ -202,7 +203,14 @@ jobs:
         run: |
           mkdir -p dist
           cp bin/nooboo.exe dist/NooBoo-windows-amd64.exe
-          cp build/windows/nsis/nooboo-installer.exe dist/NooBoo-windows-amd64-installer.exe
+          # project.nsi writes the installer into bin/ as ${INFO_PROJECTNAME}-${ARCH}-installer.exe,
+          # and the project name comes from build/windows/info.json, so match it instead of guessing.
+          installer=$(ls bin/*installer*.exe 2>/dev/null | head -n 1)
+          if [ -z "$installer" ]; then
+            echo "no installer in bin/, makensis did not run"
+            exit 1
+          fi
+          cp "$installer" dist/NooBoo-windows-amd64-installer.exe
 
       - uses: actions/upload-artifact@v4
         with:
@@ -245,6 +253,20 @@ jobs:
         with:
           path: dist
           merge-multiple: true
+
+      - name: Verify artifacts
+        run: |
+          cd dist
+          missing=0
+          for f in NooBoo-linux-amd64 NooBoo-linux-amd64.deb \
+                   NooBoo-macos-arm64.dmg NooBoo-macos-amd64.dmg \
+                   NooBoo-windows-amd64.exe NooBoo-windows-amd64-installer.exe; do
+            if [ ! -f "$f" ]; then
+              echo "missing: $f"
+              missing=1
+            fi
+          done
+          exit $missing
 
       - name: Generate checksums
         run: |
