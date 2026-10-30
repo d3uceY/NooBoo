@@ -200,7 +200,8 @@ func TestInstallRejectsAnUnknownFileType(t *testing.T) {
 	}
 }
 
-func TestInstallKeepsPriorityAndBracketPrefixes(t *testing.T) {	cfg, game, mods := gameWithMods(t)
+func TestInstallKeepsPriorityAndBracketPrefixes(t *testing.T) {
+	cfg, game, mods := gameWithMods(t)
 	src := filepath.Join(game, "downloads", "!MCCC.package")
 	write(t, src, "x")
 
