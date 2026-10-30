@@ -5,11 +5,13 @@ export {
     AppInfo,
     Backup,
     Config,
+    Exception,
     GameFolder,
     InstallRequest,
     Kind,
     Mod,
     Progress,
     Storage,
+    Suspect,
     UpdateInfo
 } from "./models.js";
