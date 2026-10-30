@@ -9,7 +9,7 @@ info:
   productName: "NooBoo" # The name of the application
   productIdentifier: "com.nooboo.app" # The unique product identifier
   description: "The Sims 4 mod manager" # The application description
-  copyright: "(c) 2026, NooBoo" # Copyright text
+  copyright: "© 2026, d3uceY" # Copyright text
   comments: "" # Comments
   version: "0.1.0" # The application version
   # cfBundleIconName: "appicon" # The macOS icon name in Assets.car icon bundles (optional)
