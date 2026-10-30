@@ -8,7 +8,6 @@ import (
 	"nooboo/services"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
-	"github.com/wailsapp/wails/v3/pkg/events"
 )
 
 //go:embed all:frontend/dist
@@ -35,37 +34,23 @@ func main() {
 		},
 	})
 
-	win := app.Window.NewWithOptions(application.WebviewWindowOptions{
+	 app.Window.NewWithOptions(application.WebviewWindowOptions{
 		Title:                 "NooBoo",
 		Width:                 760,
 		Height:                520,
 		MinWidth:              500,
 		MinHeight:             500,
-		MaxWidth:              760,
-		MaxHeight:             760,
-		MaximiseButtonState:   application.ButtonDisabled,
-		FullscreenButtonState: application.ButtonDisabled,
+		// MaximiseButtonState:   application.ButtonDisabled,
+		// FullscreenButtonState: application.ButtonDisabled,
 		BackgroundColour:      application.NewRGB(226, 241, 250),
 		URL:                   "/",
 	})
-	keepWindowFixed(win)
 
 	if err := app.Run(); err != nil {
 		log.Fatal(err)
 	}
 }
 
-// keepWindowFixed undoes a maximise or fullscreen that got in anyway. Clearing
-// the buttons stops the caption buttons, but Win+Up, a title-bar double click and
-// SC_MAXIMIZE still reach the window, so the event is the real guard.
-func keepWindowFixed(win *application.WebviewWindow) {
-	win.OnWindowEvent(events.Common.WindowMaximise, func(*application.WindowEvent) {
-		win.UnMaximise()
-	})
-	win.OnWindowEvent(events.Common.WindowFullscreen, func(*application.WindowEvent) {
-		win.UnFullscreen()
-	})
-}
 
 // progress is the event the frontend listens on during file work.
 func init() {
