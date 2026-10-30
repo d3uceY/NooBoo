@@ -29,7 +29,7 @@ Every release ships a `SHA256SUMS.txt`. The app checks for a newer stable releas
 
 **Backups.** Snapshots of `saves` and `Tray` whenever you want, and before every install. Restoring moves your current saves aside instead of overwriting them. Keeps the last ten, and you can change that.
 
-**Fix.** Tick half your mods and switch them off, launch the game, repeat until it boots. Off mods are renamed (`.package` becomes `.package.off`), so nothing moves and nothing is lost.
+**Fix.** Tick half your mods and switch them off, launch the game, repeat until it boots. Off mods are renamed (`.package` becomes `.package.off`), so nothing moves and nothing is lost. Above the list, NooBoo reads the game's own `lastException.txt` and names the mod its stack points at, with a button to switch just that one off.
 
 <table>
 <tr>
