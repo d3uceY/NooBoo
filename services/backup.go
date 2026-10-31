@@ -360,12 +360,12 @@ func (b *BackupService) OpenQuarantineWindow() error {
 	}
 	w := app.Window.NewWithOptions(application.WebviewWindowOptions{
 		Title:                 "NooBoo - Set aside",
-		Width:                 560,
-		Height:                560,
+		Width:                 420,
+		Height:                420,
 		MinWidth:              420,
 		MinHeight:             320,
-		MaxWidth:              560,
-		MaxHeight:             620,
+		MaxWidth:              420,
+		MaxHeight:             420,
 		MaximiseButtonState:   application.ButtonDisabled,
 		FullscreenButtonState: application.ButtonDisabled,
 		BackgroundColour: application.NewRGB(226, 241, 250),
