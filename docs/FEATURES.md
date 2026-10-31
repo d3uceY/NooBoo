@@ -95,11 +95,13 @@ The manifest is the completeness marker. A folder without one is debris from a c
 
 **Restore never deletes.** It counts the snapshot's files first, refuses an empty one, then moves the live `saves`/`Tray` into `quarantine/` before copying the snapshot back. A wrong restore is recoverable until you empty the quarantine.
 
+**Set aside** is a window of its own, opened from the `View` button on Backups. It lists every parked folder with its size and the `Put back` that returns it. Putting one back parks whatever it replaces and deletes the entry it came from; a removed mod that is already in Mods is refused rather than overwritten.
+
 **Retention** keeps the last N snapshots (default 10, set on the Backups screen). Pruning runs after each successful backup.
 
 ### Removing a mod
 
-`Delete` moves the folder into `quarantine/` instead of shredding it. It lands next to restore backups, so the same **Empty** control reclaims both.
+`Delete` moves the folder into `quarantine/` instead of shredding it. It lands next to restore backups, so the same **Empty** control reclaims both and **View** can put one back.
 
 ### Safety rules
 
