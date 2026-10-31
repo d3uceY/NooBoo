@@ -4,9 +4,9 @@ import * as ConfigService from '../../bindings/nooboo/services/configservice'
 import * as ExceptionService from '../../bindings/nooboo/services/exceptionservice'
 import * as ModsService from '../../bindings/nooboo/services/modsservice'
 import * as UpdateService from '../../bindings/nooboo/services/updateservice'
-import type { AppInfo, Backup, Exception, GameFolder, Mod, Progress, Storage, TidyResult, UpdateInfo } from '../../bindings/nooboo/models/models'
+import type { AppInfo, Backup, Exception, GameFolder, Mod, Progress, Quarantine, Storage, TidyResult, UpdateInfo } from '../../bindings/nooboo/models/models'
 
-export type { AppInfo, Backup, Exception, GameFolder, Mod, Progress, Storage, TidyResult, UpdateInfo }
+export type { AppInfo, Backup, Exception, GameFolder, Mod, Progress, Quarantine, Storage, TidyResult, UpdateInfo }
 
 export type Kind = 'mod' | 'cc'
 
@@ -50,6 +50,14 @@ export const api = {
   backupStorage: () => BackupService.Storage() as unknown as Promise<Storage>,
   emptyQuarantine: () => BackupService.EmptyQuarantine() as unknown as Promise<void>,
   revealBackups: () => BackupService.Reveal() as unknown as Promise<void>,
+  quarantine: () => BackupService.Quarantine() as unknown as Promise<Quarantine[]>,
+  restoreQuarantine: (id: string) =>
+    BackupService.RestoreQuarantine(id) as unknown as Promise<void>,
+  revealQuarantine: () => BackupService.RevealQuarantine() as unknown as Promise<void>,
+  openQuarantine: () => BackupService.OpenQuarantineWindow() as unknown as Promise<void>,
+
+  /** Fires when the set-aside list changes. */
+  onQuarantine: (cb: () => void) => Events.On('quarantine', () => cb()),
 
   lastException: () => ExceptionService.Latest() as unknown as Promise<Exception>,
   openException: () => ExceptionService.Open() as unknown as Promise<void>,

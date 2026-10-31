@@ -42,6 +42,9 @@ export default function Backups() {
     void load()
   }, [load])
 
+  // Reload when the set-aside window changes things.
+  useEffect(() => api.onQuarantine(() => void load()), [load])
+
   const backupNow = async () => {
     setBusy('new')
     setError('')
@@ -102,6 +105,7 @@ export default function Backups() {
           void api.setKeepLast(n).catch((e) => setError(message(e)))
         }}
         onEmpty={() => setPending({ action: 'empty', id: '' })}
+        onView={() => void api.openQuarantine()}
         disabled={busy !== ''}
       />
 
@@ -169,12 +173,14 @@ function StorageLine({
   keep,
   onKeep,
   onEmpty,
+  onView,
   disabled,
 }: {
   storage: Storage
   keep: number
   onKeep: (n: number) => void
   onEmpty: () => void
+  onView: () => void
   disabled: boolean
 }) {
   return (
@@ -187,6 +193,9 @@ function StorageLine({
         <>
           <span aria-hidden="true">·</span>
           <span className="text-[#a13028]">{bytes(storage.quarantineSize)} set aside</span>
+          <Button size="sm" variant="plain" onClick={onView} disabled={disabled}>
+            View
+          </Button>
           <Button size="sm" variant="danger" onClick={onEmpty} disabled={disabled}>
             Empty
           </Button>

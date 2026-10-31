@@ -29,13 +29,13 @@ export function Dialog({ open, onClose, title, children, footer }: DialogProps) 
       role="presentation"
     >
       <div
-        className="w-[min(460px,92vw)] overflow-hidden rounded-2xl border border-[#bcdcef] bg-panel shadow-[0_28px_60px_-20px_rgba(10,40,60,0.7)]"
+        className="flex max-h-[92vh] w-[min(460px,92vw)] flex-col overflow-hidden rounded-2xl border border-[#bcdcef] bg-panel shadow-[0_28px_60px_-20px_rgba(10,40,60,0.7)]"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-label={title}
       >
-        <div className="relative border-b border-[#145c92]/40 bg-linear-to-b from-[#5cbdf3] to-[#1d7fc4] px-4 py-3">
+        <div className="relative shrink-0 border-b border-[#145c92]/40 bg-linear-to-b from-[#5cbdf3] to-[#1d7fc4] px-4 py-3">
           <h2 className="text-center font-display text-base font-bold tracking-wide text-white drop-shadow-[0_1px_1px_rgba(10,50,80,0.55)]">
             {title}
           </h2>
@@ -48,8 +48,8 @@ export function Dialog({ open, onClose, title, children, footer }: DialogProps) 
             ✕
           </button>
         </div>
-        <div className="px-4 py-4 text-sm">{children}</div>
-        {footer && <div className="flex justify-end gap-2 px-4 pb-4">{footer}</div>}
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 text-sm">{children}</div>
+        {footer && <div className="flex shrink-0 justify-end gap-2 px-4 pb-4">{footer}</div>}
       </div>
     </div>
   )
