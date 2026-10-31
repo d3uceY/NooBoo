@@ -181,7 +181,7 @@ func TestInstallRejectsRar(t *testing.T) {
 }
 
 // Zips from creators usually wrap the packages in extra folders.
-func TestInstallZipFlattensNestedFolders(t *testing.T) {
+func TestInstallZipKeepsNestedFolders(t *testing.T) {
 	cfg, base := newTestConfig(t)
 	game := makeGame(t, filepath.Join(base, "The Sims 4"))
 	cfg.SetGameRoot(game)
@@ -199,12 +199,11 @@ func TestInstallZipFlattensNestedFolders(t *testing.T) {
 		t.Fatalf("zip install failed: %v", err)
 	}
 
-	entries, err := os.ReadDir(mod.Path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(entries) != 3 {
-		t.Fatalf("expected 3 packages flattened into one folder, got %d", len(entries))
+	// The wrapper folder is dropped, the folders inside it are kept.
+	for _, rel := range []string{"cc/hair.package", "cc/eyes.package", "deeper/skin.package"} {
+		if !fileExists(filepath.Join(mod.Path, filepath.FromSlash(rel))) {
+			t.Errorf("missing %s", rel)
+		}
 	}
 	if fileExists(filepath.Join(mod.Path, "readme.txt")) {
 		t.Fatal("non-mod files were extracted")

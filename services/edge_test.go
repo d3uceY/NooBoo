@@ -117,7 +117,7 @@ func TestInstallFromAFolderTakesEveryModFile(t *testing.T) {
 
 	// Flattened, so the game loads it from one folder deep.
 	if !fileExists(filepath.Join(mods, "Some Mod Pack", "main.package")) ||
-		!fileExists(filepath.Join(mods, "Some Mod Pack", "behaviour.ts4script")) {
+		!fileExists(filepath.Join(mods, "Some Mod Pack", "scripts", "behaviour.ts4script")) {
 		t.Fatal("a loadable file was not copied")
 	}
 	if fileExists(filepath.Join(mods, "Some Mod Pack", "helper.py")) ||
@@ -171,7 +171,7 @@ func TestInstallFromAFolderWithNoModsFails(t *testing.T) {
 	}
 }
 
-func TestInstallFromAFolderKeepsOneOfEachName(t *testing.T) {
+func TestInstallFromAFolderKeepsSameNameInDifferentFolders(t *testing.T) {
 	cfg, game, mods := gameWithMods(t)
 	src := filepath.Join(game, "downloads", "Dupes")
 	write(t, filepath.Join(src, "same.package"), "first")
@@ -184,9 +184,13 @@ func TestInstallFromAFolderKeepsOneOfEachName(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// filepath.WalkDir is lexical, so the top-level file wins.
+	// Both copies live in their own folder, so flattening cannot lose one.
 	if string(body) != "first" {
-		t.Errorf("kept %q, want the shallowest copy", body)
+		t.Errorf("top copy = %q, want first", body)
+	}
+	nested, err := os.ReadFile(filepath.Join(mods, "Dupes", "sub", "same.package"))
+	if err != nil || string(nested) != "second" {
+		t.Errorf("nested copy = %q / %v, want second", nested, err)
 	}
 }
 
@@ -246,7 +250,7 @@ func TestInstallZipCannotEscapeTheModFolder(t *testing.T) {
 		t.Fatal(err)
 	}
 	zw := zip.NewWriter(f)
-	for _, name := range []string{"../escaped.package", "deep/er/still/deep.package"} {
+	for _, name := range []string{"../escaped.package", "pack/ok.package"} {
 		w, err := zw.Create(name)
 		if err != nil {
 			t.Fatal(err)
@@ -263,8 +267,11 @@ func TestInstallZipCannotEscapeTheModFolder(t *testing.T) {
 	if _, err := NewModsService(cfg).Install(models.InstallRequest{Source: src, Name: "Evil", Kind: models.KindMod}); err != nil {
 		t.Fatal(err)
 	}
-	if !fileExists(filepath.Join(mods, "Evil", "escaped.package")) {
-		t.Error("a zip entry with ../ should still land inside the mod folder")
+	if !fileExists(filepath.Join(mods, "Evil", "ok.package")) {
+		t.Error("a normal entry did not land")
+	}
+	if fileExists(filepath.Join(mods, "Evil", "escaped.package")) {
+		t.Error("a ../ entry was copied instead of dropped")
 	}
 	if fileExists(filepath.Join(mods, "escaped.package")) {
 		t.Error("a zip entry escaped into Mods")

@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"time"
 )
 
 // openInExplorer reveals a folder in the OS file manager.
@@ -122,34 +121,6 @@ func copyFile(src, dst string) error {
 		return err
 	}
 	return out.Close()
-}
-
-// treeInfo totals a folder and keeps a sample of file names plus the newest mtime.
-// A loose file is its own tree, so its name comes back as the name, not as ".".
-func treeInfo(dir string, maxNames int) (files int, size int64, names []string, newest time.Time) {
-	_ = filepath.WalkDir(dir, func(p string, d os.DirEntry, err error) error {
-		if err != nil || d.IsDir() {
-			return nil
-		}
-		info, err := d.Info()
-		if err != nil {
-			return nil
-		}
-		files++
-		size += info.Size()
-		if info.ModTime().After(newest) {
-			newest = info.ModTime()
-		}
-		if len(names) < maxNames {
-			if p == dir {
-				names = append(names, filepath.Base(p))
-			} else if rel, err := filepath.Rel(dir, p); err == nil {
-				names = append(names, filepath.ToSlash(rel))
-			}
-		}
-		return nil
-	})
-	return files, size, names, newest
 }
 
 // folderSafe strips characters Windows refuses in a folder name.
