@@ -25,6 +25,36 @@ func openInExplorer(path string) error {
 	return cmd.Start()
 }
 
+// revealInExplorer opens a path in the file manager. A file opens the folder
+// holding it: handing a loose .package to the OS would launch it instead.
+func revealInExplorer(path string) error {
+	if info, err := os.Stat(path); err == nil && !info.IsDir() {
+		return openInExplorer(filepath.Dir(path))
+	}
+	return openInExplorer(path)
+}
+
+// movePath renames src to dst, falling back to copy-then-clear across volumes.
+func movePath(src, dst string) error {
+	if err := os.Rename(src, dst); err == nil {
+		return nil
+	}
+	info, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+	if !info.IsDir() {
+		if err := copyFile(src, dst); err != nil {
+			return err
+		}
+		return os.Remove(src)
+	}
+	if _, _, err := copyTree(src, dst, nil); err != nil {
+		return err
+	}
+	return os.RemoveAll(src)
+}
+
 // countTree totals files and bytes below dir. Missing dir counts as zero.
 func countTree(dir string) (files int, size int64) {
 	_ = filepath.WalkDir(dir, func(p string, d os.DirEntry, err error) error {

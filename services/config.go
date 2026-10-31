@@ -179,12 +179,12 @@ func (c *ConfigService) Current() models.GameFolder {
 	return c.GameFolder(root)
 }
 
-// Reveal opens a folder in File Explorer.
+// Reveal opens a folder in File Explorer, or the folder holding a file.
 func (c *ConfigService) Reveal(path string) error {
 	if path == "" {
 		return errors.New("nothing to open")
 	}
-	return openInExplorer(path)
+	return revealInExplorer(path)
 }
 
 // markers that only exist in a real Sims 4 user folder.
