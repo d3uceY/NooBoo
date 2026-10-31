@@ -12,12 +12,12 @@
 
 | Platform | File | Note |
 |---|---|---|
-| Windows, installer | [NooBoo-windows-amd64-installer.exe](https://github.com/d3uceY/NooBoo/releases/latest/download/NooBoo-windows-amd64-installer.exe) | Bundles WebView2 |
-| Windows, portable | [NooBoo-windows-amd64.exe](https://github.com/d3uceY/NooBoo/releases/latest/download/NooBoo-windows-amd64.exe) | Run it, no install |
-| macOS, Apple Silicon | [NooBoo-macos-arm64.dmg](https://github.com/d3uceY/NooBoo/releases/latest/download/NooBoo-macos-arm64.dmg) | |
-| macOS, Intel | [NooBoo-macos-amd64.dmg](https://github.com/d3uceY/NooBoo/releases/latest/download/NooBoo-macos-amd64.dmg) | |
-| Linux, x86-64 | [NooBoo-linux-amd64](https://github.com/d3uceY/NooBoo/releases/latest/download/NooBoo-linux-amd64) | `chmod +x` first |
-| Linux, .deb | [NooBoo-linux-amd64.deb](https://github.com/d3uceY/NooBoo/releases/latest/download/NooBoo-linux-amd64.deb) | Adds a menu entry |
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/windows11/windows11-original.svg" width="16" height="16" alt=""> Windows, installer | [NooBoo-windows-amd64-installer.exe](https://github.com/d3uceY/NooBoo/releases/latest/download/NooBoo-windows-amd64-installer.exe) | Bundles WebView2 |
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/windows11/windows11-original.svg" width="16" height="16" alt=""> Windows, portable | [NooBoo-windows-amd64.exe](https://github.com/d3uceY/NooBoo/releases/latest/download/NooBoo-windows-amd64.exe) | Run it, no install |
+| <img src="https://cdn.simpleicons.org/apple/8b949e" width="16" height="16" alt=""> macOS, Apple Silicon | [NooBoo-macos-arm64.dmg](https://github.com/d3uceY/NooBoo/releases/latest/download/NooBoo-macos-arm64.dmg) | |
+| <img src="https://cdn.simpleicons.org/apple/8b949e" width="16" height="16" alt=""> macOS, Intel | [NooBoo-macos-amd64.dmg](https://github.com/d3uceY/NooBoo/releases/latest/download/NooBoo-macos-amd64.dmg) | |
+| <img src="https://cdn.simpleicons.org/linux/8b949e" width="16" height="16" alt=""> Linux, x86-64 | [NooBoo-linux-amd64](https://github.com/d3uceY/NooBoo/releases/latest/download/NooBoo-linux-amd64) | `chmod +x` first |
+| <img src="https://cdn.simpleicons.org/linux/8b949e" width="16" height="16" alt=""> Linux, .deb | [NooBoo-linux-amd64.deb](https://github.com/d3uceY/NooBoo/releases/latest/download/NooBoo-linux-amd64.deb) | Adds a menu entry |
 
 Every release ships a `SHA256SUMS.txt`. The app checks for a newer stable release on launch and tells you once, with a link to it. The version in the footer opens the releases page.
 
