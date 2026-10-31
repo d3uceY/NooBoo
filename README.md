@@ -23,13 +23,15 @@ Every release ships a `SHA256SUMS.txt`. The app checks for a newer stable releas
 
 ## What it does
 
-**Library.** Mods and CC in one list. Switch off or on, open the folder, or remove. Removed mods go to quarantine.
+**Library.** Mods, CC, Tray creations and installed packs in one place. Real package thumbnails and kinds (CAS, Build Buy, Gameplay, Script), search, sort by name/creator/size/newest, filters, tags, clash badges, and a duplicate finder. Switch off or on, open the folder, or remove. Removed files go to quarantine.
 
-**Install.** Pick a `.package`, `.ts4script`, `.zip`, or folder. Files land in `Mods/<name>/`; CC is filed under its creator. Backup is on by default.
+**Install.** Pick a `.package`, `.ts4script`, `.zip`, or folder, or drop it on the window. Files land in `Mods/<name>/` with their folders intact; a lot or household goes to `Tray/`. CC is filed under its creator. Backup is on by default.
 
 **Backups.** Snapshots of `saves` and `Tray`, on demand and before every install. Restoring moves current saves aside. Keeps the last ten (configurable).
 
 **Fix.** Switch off half your mods, launch, repeat until the game boots. Off mods are renamed (`.package` becomes `.package.off`). NooBoo also reads `lastException.txt`, names the mod its stack points at, and can switch just that one off.
+
+**Packs.** Every installed expansion, game pack, stuff pack and kit, each with a switch. Switching one off writes the game's own `packstoskipmount` line — nothing is moved or uninstalled.
 
 <table>
 <tr>
