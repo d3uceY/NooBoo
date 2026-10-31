@@ -248,6 +248,11 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
       - name: Collect artifacts
         uses: actions/download-artifact@v4
         with:
@@ -274,6 +279,39 @@ jobs:
           sha256sum * > SHA256SUMS.txt
           ls -lh
 
+      - name: Build changelog
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          prev=$(git describe --tags --abbrev=0 "${tag}^" 2>/dev/null || true)
+
+          # The API is what knows the GitHub login; the git log below is only a
+          # fallback so changelog trouble can never block a release.
+          if [ -n "$prev" ]; then
+            bullets=$(gh api "repos/${GITHUB_REPOSITORY}/compare/${prev}...${tag}" \
+              --jq '(.commits | reverse)[] as $c | "- [`" + ($c.sha[0:7]) + "`](" + $c.html_url + ") " + ($c.commit.message | split("\n") | first) + (if $c.author != null and $c.author.login != null then " (@" + $c.author.login + ")" else "" end)' \
+              2>/dev/null || true)
+          else
+            bullets=$(gh api "repos/${GITHUB_REPOSITORY}/commits?sha=${tag}&per_page=100" \
+              --jq '(reverse)[] as $c | "- [`" + ($c.sha[0:7]) + "`](" + $c.html_url + ") " + ($c.commit.message | split("\n") | first) + (if $c.author != null and $c.author.login != null then " (@" + $c.author.login + ")" else "" end)' \
+              2>/dev/null || true)
+          fi
+          if [ -z "$bullets" ]; then
+            bullets=$(git log --pretty='- %h %s' -n 100 "${prev:+${prev}..}${tag}")
+          fi
+
+          {
+            echo "## Commits"
+            echo
+            echo "$bullets"
+            if [ -n "$prev" ]; then
+              echo
+              echo "**Full changelog**: https://github.com/${GITHUB_REPOSITORY}/compare/${prev}...${tag}"
+            fi
+          } > "${RUNNER_TEMP}/notes.md"
+          cat "${RUNNER_TEMP}/notes.md"
+
       - name: Publish release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -281,4 +319,4 @@ jobs:
           gh release create "${GITHUB_REF_NAME}" dist/* \
             --repo "${GITHUB_REPOSITORY}" \
             --title "NooBoo ${GITHUB_REF_NAME}" \
-            --generate-notes
+            --notes-file "${RUNNER_TEMP}/notes.md"
