@@ -177,21 +177,17 @@ type InstallRequest struct {
 
 // TrayItem is one downloaded lot, room or household set in Tray.
 type TrayItem struct {
-	ID       string   `json:"id"`
-	Name     string   `json:"name"`
-	Kind     string   `json:"kind"`
-	Creator  string   `json:"creator"`
-	Size     int64    `json:"size"`
-	Modified string   `json:"modified"`
-	Thumb    string   `json:"thumb"`
-	Files    []string `json:"files"`
-	Path     string   `json:"path"`
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Kind    string `json:"kind"`
+	Creator string `json:"creator"`
+	Size    int64  `json:"size"`
+	Thumb   string `json:"thumb"`
+	Path    string `json:"path"`
 }
 
 // InstallResult says which folder a download went to.
 type InstallResult struct {
-	Target string    `json:"target"`
-	Name   string    `json:"name"`
-	Mod    *Mod      `json:"mod,omitempty"`
-	Tray   *TrayItem `json:"tray,omitempty"`
+	Target string `json:"target"`
+	Name   string `json:"name"`
 }

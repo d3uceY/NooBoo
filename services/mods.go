@@ -307,17 +307,17 @@ func (m *ModsService) Install(req models.InstallRequest) (models.Mod, error) {
 // Tray, everything else through Install.
 func (m *ModsService) InstallDownload(req models.InstallRequest) (models.InstallResult, error) {
 	if hasTraySet(req.Source) {
-		item, err := installTraySet(m.cfg, req.Source)
+		name, err := installTraySet(m.cfg, req.Source)
 		if err != nil {
 			return models.InstallResult{}, err
 		}
-		return models.InstallResult{Target: "tray", Name: item.Name, Tray: &item}, nil
+		return models.InstallResult{Target: "tray", Name: name}, nil
 	}
 	mod, err := m.Install(req)
 	if err != nil {
 		return models.InstallResult{}, err
 	}
-	return models.InstallResult{Target: "mods", Name: mod.Name, Mod: &mod}, nil
+	return models.InstallResult{Target: "mods", Name: mod.Name}, nil
 }
 
 // copyModFiles copies the loadable files a folder holds, keeping the shape

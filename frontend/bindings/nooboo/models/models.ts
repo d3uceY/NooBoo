@@ -396,8 +396,6 @@ export class InstallRequest {
 export class InstallResult {
     "target": string;
     "name": string;
-    "mod"?: Mod | null;
-    "tray"?: TrayItem | null;
 
     /** Creates a new InstallResult instance. */
     constructor($$source: Partial<InstallResult> = {}) {
@@ -415,15 +413,7 @@ export class InstallResult {
      * Creates a new InstallResult instance from a string or object.
      */
     static createFrom($$source: any = {}): InstallResult {
-        const $$createField2_0 = $$createType7;
-        const $$createField3_0 = $$createType9;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        if ("mod" in $$parsedSource) {
-            $$parsedSource["mod"] = $$createField2_0($$parsedSource["mod"]);
-        }
-        if ("tray" in $$parsedSource) {
-            $$parsedSource["tray"] = $$createField3_0($$parsedSource["tray"]);
-        }
         return new InstallResult($$parsedSource as Partial<InstallResult>);
     }
 }
@@ -514,8 +504,8 @@ export class Mod {
      */
     static createFrom($$source: any = {}): Mod {
         const $$createField8_0 = $$createType0;
-        const $$createField12_0 = $$createType11;
-        const $$createField13_0 = $$createType13;
+        const $$createField12_0 = $$createType7;
+        const $$createField13_0 = $$createType9;
         const $$createField14_0 = $$createType0;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("files" in $$parsedSource) {
@@ -783,7 +773,7 @@ export class TidyResult {
      * Creates a new TidyResult instance from a string or object.
      */
     static createFrom($$source: any = {}): TidyResult {
-        const $$createField0_0 = $$createType15;
+        const $$createField0_0 = $$createType11;
         const $$createField2_0 = $$createType0;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("moved" in $$parsedSource) {
@@ -805,9 +795,7 @@ export class TrayItem {
     "kind": string;
     "creator": string;
     "size": number;
-    "modified": string;
     "thumb": string;
-    "files": string[];
     "path": string;
 
     /** Creates a new TrayItem instance. */
@@ -827,14 +815,8 @@ export class TrayItem {
         if (!("size" in $$source)) {
             this["size"] = 0;
         }
-        if (!("modified" in $$source)) {
-            this["modified"] = "";
-        }
         if (!("thumb" in $$source)) {
             this["thumb"] = "";
-        }
-        if (!("files" in $$source)) {
-            this["files"] = [];
         }
         if (!("path" in $$source)) {
             this["path"] = "";
@@ -847,11 +829,7 @@ export class TrayItem {
      * Creates a new TrayItem instance from a string or object.
      */
     static createFrom($$source: any = {}): TrayItem {
-        const $$createField7_0 = $$createType0;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        if ("files" in $$parsedSource) {
-            $$parsedSource["files"] = $$createField7_0($$parsedSource["files"]);
-        }
         return new TrayItem($$parsedSource as Partial<TrayItem>);
     }
 }
@@ -903,13 +881,9 @@ const $$createType2 = DuplicateFile.createFrom;
 const $$createType3 = $Create.Array($$createType2);
 const $$createType4 = Suspect.createFrom;
 const $$createType5 = $Create.Array($$createType4);
-const $$createType6 = Mod.createFrom;
-const $$createType7 = $Create.Nullable($$createType6);
-const $$createType8 = TrayItem.createFrom;
+const $$createType6 = ConflictRef.createFrom;
+const $$createType7 = $Create.Array($$createType6);
+const $$createType8 = AdvisoryRef.createFrom;
 const $$createType9 = $Create.Nullable($$createType8);
-const $$createType10 = ConflictRef.createFrom;
+const $$createType10 = TidyMove.createFrom;
 const $$createType11 = $Create.Array($$createType10);
-const $$createType12 = AdvisoryRef.createFrom;
-const $$createType13 = $Create.Nullable($$createType12);
-const $$createType14 = TidyMove.createFrom;
-const $$createType15 = $Create.Array($$createType14);

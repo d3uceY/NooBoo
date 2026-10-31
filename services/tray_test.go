@@ -97,7 +97,7 @@ func TestTraySingleItemPullsSiblings(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.Target != "tray" || res.Tray == nil {
+	if res.Target != "tray" || res.Name != "Sunset House" {
 		t.Fatalf("result = %+v", res)
 	}
 	if !fileExists(filepath.Join(game, "Tray", trayFile("blueprint"))) {
@@ -154,7 +154,7 @@ func TestInstallDownloadRoutesMods(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.Target != "mods" || res.Mod == nil || res.Tray != nil {
+	if res.Target != "mods" || res.Name != "Cool" {
 		t.Fatalf("result = %+v", res)
 	}
 }

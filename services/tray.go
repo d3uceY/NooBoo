@@ -15,7 +15,6 @@ import (
 	"regexp"
 	"sort"
 	"strings"
-	"time"
 
 	"nooboo/models"
 )
@@ -23,6 +22,21 @@ import (
 // A Sims 4 tray item is a set of files sharing one instance:
 // 0x<group>!0x<instance>.<ext>.
 var trayNameRe = regexp.MustCompile(`(?i)^0x([0-9a-f]{1,16})!0x([0-9a-f]{1,16})\.([a-z0-9]+)$`)
+
+func trayParts(name string) (instance, ext string, ok bool) {
+	m := trayNameRe.FindStringSubmatch(name)
+	if m == nil {
+		return "", "", false
+	}
+	return strings.ToLower(m[2]), strings.ToLower(m[3]), true
+}
+
+func trayExt(ext string) bool {
+	if ext == "trayitem" || ext == "sgi" || trayThumbs[ext] {
+		return true
+	}
+	return trayKinds[ext] != ""
+}
 
 var trayKinds = map[string]string{
 	"householdbinary": "household",
@@ -71,17 +85,13 @@ func (t *TrayService) Scan() ([]models.TrayItem, error) {
 	groups := map[string][]string{}
 	anchors := map[string]string{}
 	for _, e := range entries {
-		if e.IsDir() || !isTrayName(e.Name()) {
-			continue
+		instance, ext, ok := trayParts(e.Name())
+		if !ok || !trayExt(ext) || ext == "sgi" {
+			continue // portraits belong to a household, not a row
 		}
-		m := trayNameRe.FindStringSubmatch(e.Name())
-		if strings.EqualFold(m[3], "sgi") {
-			continue // per-sim portraits belong to a household, not a row
-		}
-		key := strings.ToLower(m[2])
-		groups[key] = append(groups[key], e.Name())
-		if strings.EqualFold(m[3], "trayitem") {
-			anchors[key] = e.Name()
+		groups[instance] = append(groups[instance], e.Name())
+		if ext == "trayitem" {
+			anchors[instance] = e.Name()
 		}
 	}
 
@@ -92,26 +102,21 @@ func (t *TrayService) Scan() ([]models.TrayItem, error) {
 			id = files[0]
 		}
 		item := models.TrayItem{
-			ID:    id,
-			Name:  displayName(id),
-			Kind:  "household",
-			Files: []string{},
-			Path:  filepath.Join(dir, id),
+			ID:   id,
+			Name: displayName(id),
+			Kind: "household",
+			Path: filepath.Join(dir, id),
 		}
 		if name, creator := readTrayItem(filepath.Join(dir, id)); name != "" {
 			item.Name = name
 			item.Creator = creator
 		}
-		var newest time.Time
 		var best []byte
 		bestArea := -1
 		for _, f := range files {
 			full := filepath.Join(dir, f)
 			if info, err := os.Stat(full); err == nil {
 				item.Size += info.Size()
-				if info.ModTime().After(newest) {
-					newest = info.ModTime()
-				}
 			}
 			ext := strings.ToLower(strings.TrimPrefix(filepath.Ext(f), "."))
 			if kind, ok := trayKinds[ext]; ok {
@@ -124,10 +129,6 @@ func (t *TrayService) Scan() ([]models.TrayItem, error) {
 					}
 				}
 			}
-			item.Files = append(item.Files, f)
-		}
-		if !newest.IsZero() {
-			item.Modified = newest.Format(time.RFC3339)
 		}
 		if best != nil {
 			item.Thumb = dataURL(best)
@@ -181,53 +182,42 @@ type traySource struct {
 	data []byte
 }
 
-// installTraySet copies a whole set into Tray, never half of one.
-func installTraySet(cfg *ConfigService, source string) (models.TrayItem, error) {
+// installTraySet copies a whole set into Tray and returns its name.
+func installTraySet(cfg *ConfigService, source string) (string, error) {
 	sources, err := traySources(source)
 	if err != nil {
-		return models.TrayItem{}, err
+		return "", err
 	}
 	if len(sources) == 0 {
-		return models.TrayItem{}, errors.New("no tray files in this download")
+		return "", errors.New("no tray files in this download")
 	}
 
 	dir, err := NewTrayService(cfg).dir()
 	if err != nil {
-		return models.TrayItem{}, err
+		return "", err
 	}
 	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return models.TrayItem{}, err
+		return "", err
 	}
 
 	anchor := ""
-	kind := "household"
 	for _, s := range sources {
 		if err := copyTraySource(s, dir); err != nil {
-			return models.TrayItem{}, err
+			return "", err
 		}
-		m := trayNameRe.FindStringSubmatch(s.name)
-		if m == nil {
-			continue
-		}
-		ext := strings.ToLower(m[3])
-		if ext == "trayitem" {
+		if _, ext, ok := trayParts(s.name); ok && ext == "trayitem" {
 			anchor = s.name
-		}
-		if k, ok := trayKinds[ext]; ok {
-			kind = k
 		}
 	}
 	if anchor == "" {
 		anchor = sources[0].name
 	}
 
-	items, _ := NewTrayService(cfg).Scan()
-	for _, item := range items {
-		if item.ID == anchor {
-			return item, nil
-		}
+	name := displayName(anchor)
+	if meta, _ := readTrayItem(filepath.Join(dir, anchor)); meta != "" {
+		name = meta
 	}
-	return models.TrayItem{ID: anchor, Name: displayName(anchor), Kind: kind}, nil
+	return name, nil
 }
 
 func traySources(source string) ([]traySource, error) {
@@ -291,11 +281,10 @@ func traySources(source string) ([]traySource, error) {
 
 // traySiblings is the rest of the set beside a picked file, portraits included.
 func traySiblings(path string) []string {
-	m := trayNameRe.FindStringSubmatch(filepath.Base(path))
-	if m == nil {
+	instance, _, ok := trayParts(filepath.Base(path))
+	if !ok {
 		return []string{path}
 	}
-	instance := strings.ToLower(m[2])
 	dir := filepath.Dir(path)
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -307,13 +296,8 @@ func traySiblings(path string) []string {
 		if e.IsDir() || seen[e.Name()] {
 			continue
 		}
-		s := trayNameRe.FindStringSubmatch(e.Name())
-		if s == nil {
-			continue
-		}
-		sameItem := strings.ToLower(s[2]) == instance
-		portrait := strings.EqualFold(s[3], "sgi")
-		if !sameItem && !portrait {
+		other, ext, ok := trayParts(e.Name())
+		if !ok || (other != instance && ext != "sgi") {
 			continue
 		}
 		seen[e.Name()] = true
@@ -348,16 +332,8 @@ func copyTraySource(src traySource, dir string) error {
 }
 
 func isTrayName(name string) bool {
-	m := trayNameRe.FindStringSubmatch(name)
-	if m == nil {
-		return false
-	}
-	ext := strings.ToLower(m[3])
-	if ext == "trayitem" || ext == "sgi" || trayThumbs[ext] {
-		return true
-	}
-	_, ok := trayKinds[ext]
-	return ok
+	_, ext, ok := trayParts(name)
+	return ok && trayExt(ext)
 }
 
 // readTrayItem pulls the name and creator out of the metadata protobuf.
@@ -367,7 +343,7 @@ func readTrayItem(path string) (name, creator string) {
 		return "", ""
 	}
 	fields := protoFields(raw[trayHeaderBytes:])
-	return cleanText(fields[4]), cleanText(fields[7])
+	return strings.TrimSpace(string(fields[4])), strings.TrimSpace(string(fields[7]))
 }
 
 // protoFields keeps the last length-delimited value for each field number.
@@ -411,10 +387,6 @@ func protoFields(b []byte) map[int][]byte {
 		}
 	}
 	return out
-}
-
-func cleanText(b []byte) string {
-	return strings.TrimSpace(string(b))
 }
 
 // readTrayImage undoes the tray's XOR obfuscation.
