@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -12,6 +13,7 @@ import (
 	"nooboo/models"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
+	"github.com/wailsapp/wails/v3/pkg/events"
 )
 
 const manifestName = "backup.json"
@@ -25,6 +27,8 @@ type BackupService struct {
 	// sweepAfter spares snapshots that are still being written. Zero sweeps
 	// everything, which is what the tests want.
 	sweepAfter time.Duration
+	// setAside is the one quarantine window, reused instead of piling up.
+	setAside *application.WebviewWindow
 }
 
 func NewBackupService(cfg *ConfigService) *BackupService {
@@ -180,7 +184,9 @@ func (b *BackupService) Storage() models.Storage {
 
 // EmptyQuarantine drops the folders held back by previous restores.
 func (b *BackupService) EmptyQuarantine() error {
-	return os.RemoveAll(b.quarantineDir())
+	err := os.RemoveAll(b.quarantineDir())
+	emitQuarantine()
+	return err
 }
 
 // Restore puts a snapshot back. Live folders are moved aside first, never deleted,
@@ -199,34 +205,194 @@ func (b *BackupService) Restore(id string) error {
 		return errors.New("snapshot is empty, nothing to restore")
 	}
 
-	aside := uniqueDir(filepath.Join(b.quarantineDir(), time.Now().Format("2006-01-02_15-04-05")))
-	moved := false
-	for _, part := range backupParts {
-		live := filepath.Join(root, part)
-		if !fileExists(live) {
-			continue
-		}
-		if err := os.MkdirAll(aside, 0o755); err != nil {
-			return err
-		}
-		if err := os.Rename(live, filepath.Join(aside, part)); err != nil {
-			// Rename fails across volumes; copy then clear instead.
-			if _, _, cerr := copyTree(live, filepath.Join(aside, part), nil); cerr != nil {
-				return cerr
-			}
-			if err := os.RemoveAll(live); err != nil {
-				return err
-			}
-		}
-		moved = true
-	}
-	if !moved {
-		_ = os.Remove(aside) // nothing to park, drop the empty folder
+	if _, err := b.park(root, backupParts); err != nil {
+		return err
 	}
 
 	_, _, err := b.copyParts(src, root, "Restoring")
 	emit("done", 1, 1, "Restored")
 	return err
+}
+
+// park moves live parts into one timestamped quarantine folder and returns it, or
+// "" when nothing moved. Nothing is deleted.
+func (b *BackupService) park(root string, parts []string) (string, error) {
+	aside := uniqueDir(filepath.Join(b.quarantineDir(), time.Now().Format("2006-01-02_15-04-05")))
+	moved := false
+	for _, part := range parts {
+		live := filepath.Join(root, part)
+		if !fileExists(live) {
+			continue
+		}
+		if err := os.MkdirAll(aside, 0o755); err != nil {
+			return "", err
+		}
+		if err := movePath(live, filepath.Join(aside, part)); err != nil {
+			return "", err
+		}
+		moved = true
+	}
+	if !moved {
+		_ = os.Remove(aside) // nothing to park, drop the empty folder
+		return "", nil
+	}
+	return aside, nil
+}
+
+// isBackupPart reports whether a parked name is saves/Tray, not a removed mod.
+func isBackupPart(name string) bool {
+	for _, part := range backupParts {
+		if strings.EqualFold(part, name) {
+			return true
+		}
+	}
+	return false
+}
+
+// Quarantine lists what restores and mod removals parked, newest first.
+func (b *BackupService) Quarantine() ([]models.Quarantine, error) {
+	entries, err := os.ReadDir(b.quarantineDir())
+	if err != nil {
+		return []models.Quarantine{}, nil
+	}
+	out := []models.Quarantine{}
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		dir := filepath.Join(b.quarantineDir(), e.Name())
+		subs, err := os.ReadDir(dir)
+		if err != nil {
+			continue
+		}
+		q := models.Quarantine{ID: e.Name(), Parts: []string{}}
+		for _, s := range subs {
+			q.Parts = append(q.Parts, s.Name())
+			if s.IsDir() {
+				files, size := countTree(filepath.Join(dir, s.Name()))
+				q.Files += files
+				q.Size += size
+				continue
+			}
+			q.Files++
+			if info, err := s.Info(); err == nil {
+				q.Size += info.Size()
+			}
+		}
+		out = append(out, q)
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].ID > out[j].ID })
+	return out, nil
+}
+
+// RestoreQuarantine puts one parked folder back. The live files it replaces are
+// parked first, then the entry it came from is deleted.
+func (b *BackupService) RestoreQuarantine(id string) error {
+	if id == "" || strings.ContainsAny(id, `/\`) {
+		return errors.New("bad quarantine id")
+	}
+	root := b.cfg.Get().GameRoot
+	if root == "" {
+		return errors.New("set your Sims 4 folder first")
+	}
+	src := filepath.Join(b.quarantineDir(), id)
+	subs, err := os.ReadDir(src)
+	if err != nil || len(subs) == 0 {
+		return errors.New("nothing set aside under that name")
+	}
+
+	// Sort first, refuse before touching anything: a mod already in Mods wins.
+	// Loose files are skipped, since neither saves nor Mods has a slot for one.
+	saves, mods := []string{}, []string{}
+	for _, s := range subs {
+		if !s.IsDir() {
+			continue
+		}
+		if isBackupPart(s.Name()) {
+			saves = append(saves, s.Name())
+			continue
+		}
+		if fileExists(filepath.Join(root, "Mods", s.Name())) {
+			return fmt.Errorf("%s is already in Mods", s.Name())
+		}
+		mods = append(mods, s.Name())
+	}
+	if len(saves)+len(mods) == 0 {
+		return errors.New("nothing to put back")
+	}
+
+	if len(saves) > 0 {
+		if _, err := b.park(root, saves); err != nil {
+			return err
+		}
+	}
+
+	for _, part := range saves {
+		if err := movePath(filepath.Join(src, part), filepath.Join(root, part)); err != nil {
+			return err
+		}
+	}
+	for _, mod := range mods {
+		if err := movePath(filepath.Join(src, mod), filepath.Join(root, "Mods", mod)); err != nil {
+			return err
+		}
+	}
+	// Spent: the contents are back and what they replaced is parked.
+	if err := os.RemoveAll(src); err != nil {
+		return err
+	}
+	emit("done", 1, 1, "Put back")
+	emitQuarantine()
+	return nil
+}
+
+// OpenQuarantineWindow opens the set-aside list in its own window. A second
+// call focuses that window.
+func (b *BackupService) OpenQuarantineWindow() error {
+	app := application.Get()
+	if app == nil {
+		return errors.New("no window available")
+	}
+	if b.setAside != nil {
+		b.setAside.Restore()
+		b.setAside.Focus()
+		return nil
+	}
+	w := app.Window.NewWithOptions(application.WebviewWindowOptions{
+		Title:                 "NooBoo - Set aside",
+		Width:                 560,
+		Height:                560,
+		MinWidth:              420,
+		MinHeight:             320,
+		MaxWidth:              560,
+		MaxHeight:             620,
+		MaximiseButtonState:   application.ButtonDisabled,
+		FullscreenButtonState: application.ButtonDisabled,
+		BackgroundColour: application.NewRGB(226, 241, 250),
+		URL:              "/?view=quarantine",
+	})
+	w.OnWindowEvent(events.Common.WindowClosing, func(*application.WindowEvent) {
+		b.setAside = nil
+	})
+	b.setAside = w
+	return nil
+}
+
+// emitQuarantine tells open windows the set-aside list changed.
+func emitQuarantine() {
+	app := application.Get()
+	if app == nil {
+		return
+	}
+	app.Event.Emit("quarantine", struct{}{})
+}
+
+// RevealQuarantine opens the set-aside folder.
+func (b *BackupService) RevealQuarantine() error {
+	if err := os.MkdirAll(b.quarantineDir(), 0o755); err != nil {
+		return err
+	}
+	return openInExplorer(b.quarantineDir())
 }
 
 // Delete removes one snapshot.

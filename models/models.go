@@ -55,6 +55,14 @@ type Storage struct {
 	QuarantineSize int64 `json:"quarantineSize"`
 }
 
+// Quarantine is one parked folder. Parts names what it holds.
+type Quarantine struct {
+	ID    string   `json:"id"`
+	Parts []string `json:"parts"`
+	Files int      `json:"files"`
+	Size  int64    `json:"size"`
+}
+
 // AppInfo is the build's version and where to point the user for releases.
 type AppInfo struct {
 	Version string `json:"version"`

@@ -3,6 +3,7 @@ package services
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -247,6 +248,141 @@ func mustList(t *testing.T, svc *BackupService) []models.Backup {
 		t.Fatalf("no snapshots: %v", err)
 	}
 	return list
+}
+
+// The view button needs a name, a size and what is inside, or it shows a number.
+func TestQuarantineListsWhatRestoreParked(t *testing.T) {
+	cfg, base := newTestConfig(t)
+	cfg.SetGameRoot(makeGame(t, filepath.Join(base, "The Sims 4")))
+
+	svc := sweeper(cfg)
+	if _, err := svc.BackupNow(); err != nil {
+		t.Fatal(err)
+	}
+	if err := svc.Restore(mustList(t, svc)[0].ID); err != nil {
+		t.Fatal(err)
+	}
+
+	list, err := svc.Quarantine()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(list) != 1 {
+		t.Fatalf("expected the parked saves, got %+v", list)
+	}
+	if list[0].Files < 2 || list[0].Size <= 0 {
+		t.Fatalf("parked folder reads as empty: %+v", list[0])
+	}
+	if strings.Join(list[0].Parts, ",") != "Tray,saves" {
+		t.Fatalf("parts wrong: %v", list[0].Parts)
+	}
+}
+
+// Putting back the saves a restore parked must bring the old files back, and
+// must park the ones it replaces rather than deleting them.
+func TestRestoreQuarantinePutsParkedSavesBack(t *testing.T) {
+	cfg, base := newTestConfig(t)
+	game := makeGame(t, filepath.Join(base, "The Sims 4"))
+	cfg.SetGameRoot(game)
+
+	svc := sweeper(cfg)
+	if _, err := svc.BackupNow(); err != nil {
+		t.Fatal(err)
+	}
+	if err := svc.Restore(mustList(t, svc)[0].ID); err != nil {
+		t.Fatal(err)
+	}
+	parked, err := svc.Quarantine()
+	if err != nil || len(parked) != 1 {
+		t.Fatalf("expected one parked folder: %+v %v", parked, err)
+	}
+
+	if err := svc.RestoreQuarantine(parked[0].ID); err != nil {
+		t.Fatal(err)
+	}
+
+	body, err := os.ReadFile(filepath.Join(game, "saves", "Slot_00000001.save"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(body) != "save" {
+		t.Fatalf("live saves hold %q, want the parked copy", body)
+	}
+	// The entry that was put back is deleted; only the copy it replaced remains.
+	after, err := svc.Quarantine()
+	if err != nil || len(after) != 1 {
+		t.Fatalf("the replaced saves were not parked: %+v %v", after, err)
+	}
+	if after[0].ID == parked[0].ID {
+		t.Fatalf("the put-back entry %q is still listed", parked[0].ID)
+	}
+	if fileExists(filepath.Join(svc.quarantineDir(), parked[0].ID)) {
+		t.Fatal("the put-back entry was left on disk")
+	}
+}
+
+// A stray file in an entry has nowhere to go, so nothing is moved or deleted.
+func TestRestoreQuarantineSkipsLooseFiles(t *testing.T) {
+	cfg, base := newTestConfig(t)
+	game := makeGame(t, filepath.Join(base, "The Sims 4"))
+	cfg.SetGameRoot(game)
+
+	svc := sweeper(cfg)
+	aside := filepath.Join(svc.quarantineDir(), "2026-01-01_00-00-00")
+	write(t, filepath.Join(aside, "notes.txt"), "stray")
+	write(t, filepath.Join(aside, "saves", "Slot_00000001.save"), "parked")
+
+	if err := svc.RestoreQuarantine("2026-01-01_00-00-00"); err != nil {
+		t.Fatal(err)
+	}
+	if fileExists(filepath.Join(game, "Mods", "notes.txt")) {
+		t.Fatal("a loose file was dropped into Mods")
+	}
+	if fileExists(aside) {
+		t.Fatal("the spent entry was left on disk")
+	}
+}
+
+// An entry holding nothing puttable back is refused instead of quietly deleted.
+func TestRestoreQuarantineRefusesEmptyEntry(t *testing.T) {
+	cfg, _ := newTestConfig(t)
+	svc := sweeper(cfg)
+	aside := filepath.Join(svc.quarantineDir(), "2026-01-01_00-00-00")
+	write(t, filepath.Join(aside, "notes.txt"), "stray")
+
+	if err := svc.RestoreQuarantine("2026-01-01_00-00-00"); err == nil {
+		t.Fatal("an entry with nothing to put back reported success")
+	}
+	if !fileExists(filepath.Join(aside, "notes.txt")) {
+		t.Fatal("the refused entry was deleted")
+	}
+}
+
+// A mod is never overwritten: the entry stays put and the call says why.
+func TestRestoreQuarantineRefusesModAlreadyInMods(t *testing.T) {
+	cfg, base := newTestConfig(t)
+	game := makeGame(t, filepath.Join(base, "The Sims 4"))
+	cfg.SetGameRoot(game)
+	write(t, filepath.Join(game, "Mods", "MCCC", "MCCC.package"), "live")
+
+	svc := sweeper(cfg)
+	aside := filepath.Join(svc.quarantineDir(), "2026-01-01_00-00-00")
+	write(t, filepath.Join(aside, "MCCC", "MCCC.package"), "parked")
+
+	if err := svc.RestoreQuarantine("2026-01-01_00-00-00"); err == nil {
+		t.Fatal("a mod already in Mods was overwritten")
+	}
+	if !fileExists(filepath.Join(aside, "MCCC", "MCCC.package")) {
+		t.Fatal("the refused entry was consumed")
+	}
+}
+
+func TestRestoreQuarantineRejectsPathTraversal(t *testing.T) {
+	cfg, _ := newTestConfig(t)
+	svc := sweeper(cfg)
+	if err := svc.RestoreQuarantine("../backups"); err == nil {
+		t.Fatal("a traversal id was accepted")
+	}
 }
 
 // Snapshots must not pile up forever; the oldest go once the cap is reached.

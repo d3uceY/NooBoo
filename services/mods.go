@@ -397,17 +397,7 @@ func (m *ModsService) Delete(id string) error {
 	if err := os.MkdirAll(aside, 0o755); err != nil {
 		return err
 	}
-	dest := filepath.Join(aside, filepath.Base(target))
-	if err := os.Rename(target, dest); err != nil {
-		// Rename fails across volumes; copy then clear instead.
-		if _, _, cerr := copyTree(target, dest, nil); cerr != nil {
-			return cerr
-		}
-		if err := os.RemoveAll(target); err != nil {
-			return err
-		}
-	}
-	return nil
+	return movePath(target, filepath.Join(aside, filepath.Base(target)))
 }
 
 // extractZip pulls only the files the game loads, flattening directories so a
