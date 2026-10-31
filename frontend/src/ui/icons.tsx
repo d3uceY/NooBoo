@@ -5,6 +5,8 @@ import installIcon from '../assets/icons/install.png'
 import libraryIcon from '../assets/icons/library.png'
 import markIcon from '../assets/icons/mark.png'
 import modIcon from '../assets/icons/mod.png'
+import viewGridIcon from '../assets/icons/view-grid.png'
+import viewListIcon from '../assets/icons/view-list.png'
 
 /**
  * In-game art from TheSimKid's Sims 4 Modder Icons pack.
@@ -20,6 +22,8 @@ const art = {
   fix: fixIcon, // ClientFullBuild8 0x30A8FC337647DF1E, yellow screwdriver
   mod: modIcon, // Aspirations 0x70F4F2B9947509F6
   cc: ccIcon, // Aspirations 0xC75AD63DD21C9DE3
+  viewList: viewListIcon, // ClientFullBuild7 0xFBA9F57941AEC08F, lined paper stack
+  viewGrid: viewGridIcon, // ClientFullBuild8 0x6E6131EA6B757618, tablet grid
 } as const
 
 export type ArtName = keyof typeof art
