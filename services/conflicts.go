@@ -1,7 +1,6 @@
 package services
 
 import (
-	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -34,25 +33,23 @@ func reasonRank(reason string) int {
 // versionSuffixRe matches "Hair v1", "hair_v2" and "hair 1.2", but not "Lot 2".
 var versionSuffixRe = regexp.MustCompile(`(?i)^(.*?)[\s_\-+](?:v(\d+(?:\.\d+)*)|(\d+\.\d+))$`)
 
-func versionToken(name string) string {
+func splitVersion(name string) (base, token string) {
 	m := versionSuffixRe.FindStringSubmatch(strings.TrimSpace(name))
 	if m == nil {
-		return ""
+		return "", ""
 	}
-	if m[2] != "" {
-		return m[2]
+	token = m[2]
+	if token == "" {
+		token = m[3]
 	}
-	return m[3]
+	base = strings.ToLower(m[1])
+	base = strings.NewReplacer("_", " ", "-", " ", "+", " ").Replace(base)
+	return strings.Join(strings.Fields(base), " "), token
 }
 
-func versionBase(name string) string {
-	m := versionSuffixRe.FindStringSubmatch(strings.TrimSpace(name))
-	if m == nil {
-		return ""
-	}
-	base := strings.ToLower(m[1])
-	base = strings.NewReplacer("_", " ", "-", " ", "+", " ").Replace(base)
-	return strings.Join(strings.Fields(base), " ")
+func versionToken(name string) string {
+	_, token := splitVersion(name)
+	return token
 }
 
 func conflictKey(a, b string) string {
@@ -116,14 +113,12 @@ func findConflicts(
 		if name != "" {
 			byName[name] = append(byName[name], mod.ID)
 		}
-		if token := versionToken(mod.Name); token != "" {
-			if base := versionBase(mod.Name); base != "" {
-				if byBase[base] == nil {
-					byBase[base] = map[string]string{}
-				}
-				if _, ok := byBase[base][token]; !ok {
-					byBase[base][token] = mod.ID
-				}
+		if base, token := splitVersion(mod.Name); token != "" && base != "" {
+			if byBase[base] == nil {
+				byBase[base] = map[string]string{}
+			}
+			if _, ok := byBase[base][token]; !ok {
+				byBase[base][token] = mod.ID
 			}
 		}
 	}
@@ -229,9 +224,4 @@ func (m *ModsService) attachHints(mods []models.Mod) {
 		}
 		mods[i].Advisory = matchAdvisory(mods[i], advisories)
 	}
-}
-
-// modsDir is only here so a relative path can be resolved in one place.
-func modsDir(dir, rel string) string {
-	return filepath.Join(dir, filepath.FromSlash(rel))
 }

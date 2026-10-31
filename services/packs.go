@@ -54,9 +54,13 @@ func (s *PackService) List() ([]models.Pack, error) {
 			continue
 		}
 		code := strings.ToUpper(e.Name())
+		name := packNames[code]
+		if name == "" {
+			name = code
+		}
 		packs = append(packs, models.Pack{
 			Code:    code,
-			Name:    packName(code),
+			Name:    name,
 			Kind:    packKind(code),
 			Enabled: !skip[code],
 		})
@@ -166,13 +170,6 @@ func packKind(code string) string {
 		return "stuff pack"
 	}
 	return "kit"
-}
-
-func packName(code string) string {
-	if name, ok := packNames[code]; ok {
-		return name
-	}
-	return code
 }
 
 // looksLikeInstall tells a game install apart from the user folder.

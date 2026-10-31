@@ -140,7 +140,7 @@ func (m *ModsService) SetAsideFile(rel string) error {
 		return err
 	}
 	root := filepath.Clean(dir)
-	target := filepath.Clean(modsDir(root, rel))
+	target := filepath.Clean(filepath.Join(root, filepath.FromSlash(rel)))
 	if target == root || !strings.HasPrefix(target, root+string(os.PathSeparator)) {
 		return fmt.Errorf("invalid file %q", rel)
 	}

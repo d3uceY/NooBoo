@@ -82,7 +82,7 @@ func packFixture(t *testing.T) (*ConfigService, string) {
 			t.Fatal(err)
 		}
 	}
-	for _, d := range []string{"EP01", "GP04", "SP24", "readme"} {
+	for _, d := range []string{"EP01", "GP04", "SP24", "EP99", "readme"} {
 		if err := os.MkdirAll(filepath.Join(install, d), 0o755); err != nil {
 			t.Fatal(err)
 		}
@@ -102,15 +102,20 @@ func TestPacksListFromInstallRoot(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(packs) != 3 {
+	if len(packs) != 4 {
 		t.Fatalf("got %d packs: %+v", len(packs), packs)
 	}
 	byCode := map[string]bool{}
+	names := map[string]string{}
 	for _, p := range packs {
 		byCode[p.Code] = p.Enabled
+		names[p.Code] = p.Name
 		if p.Code == "GP04" && p.Name != "Vampires" {
 			t.Errorf("GP04 name = %q", p.Name)
 		}
+	}
+	if names["EP99"] != "EP99" {
+		t.Errorf("unknown code name = %q, want EP99", names["EP99"])
 	}
 	if byCode["GP04"] || !byCode["EP01"] || !byCode["SP24"] {
 		t.Fatalf("states = %+v", byCode)
@@ -136,11 +141,5 @@ func TestSetEnabledWritesSkipLine(t *testing.T) {
 	body, _ = os.ReadFile(filepath.Join(game, "UserSetting.ini"))
 	if !strings.Contains(string(body), "packstoskipmount = GP04") {
 		t.Fatalf("ini = %q", body)
-	}
-}
-
-func TestPackNameFallsBackToCode(t *testing.T) {
-	if got := packName("EP99"); got != "EP99" {
-		t.Errorf("got %q", got)
 	}
 }

@@ -97,22 +97,19 @@ func (c *ConfigService) DetectGameRoot() string {
 // gameRootUnder checks every Documents a machine may use, including the fake
 // Windows home inside a Wine/Proton prefix on Linux and the Steam Deck.
 func gameRootUnder(home string) string {
-	for _, documents := range documentsDirs(home) {
+	dirs := []string{
+		filepath.Join(home, "Documents"),
+		filepath.Join(home, "OneDrive", "Documents"),
+	}
+	dirs = append(dirs, steamDocumentsDirs(home)...)
+	dirs = append(dirs, prefixDocumentsDirs(home)...)
+	for _, documents := range dirs {
 		p := filepath.Join(documents, "Electronic Arts", "The Sims 4")
 		if inspect(p).Valid {
 			return p
 		}
 	}
 	return ""
-}
-
-func documentsDirs(home string) []string {
-	dirs := []string{
-		filepath.Join(home, "Documents"),
-		filepath.Join(home, "OneDrive", "Documents"),
-	}
-	dirs = append(dirs, steamDocumentsDirs(home)...)
-	return append(dirs, prefixDocumentsDirs(home)...)
 }
 
 // steamRoots are the client folders a Linux install can live in.

@@ -5,7 +5,6 @@ import (
 	"compress/zlib"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -34,10 +33,6 @@ type resourceKey struct {
 	Type     uint32
 	Group    uint32
 	Instance uint64
-}
-
-func (k resourceKey) String() string {
-	return fmt.Sprintf("%08x:%08x:%016x", k.Type, k.Group, k.Instance)
 }
 
 type dbpfEntry struct {
@@ -417,17 +412,6 @@ func (m *ModsService) insightForPath(path string, size int64, newest time.Time) 
 	return ins
 }
 
-func (m *ModsService) insightForFile(path string, size int64, newest time.Time) *packageInsight {
-	if ins, ok := m.cachedInsight(path, size, newest); ok {
-		return ins
-	}
-	ins := scanPackage(path)
-	m.mu.Lock()
-	m.insights[path] = cachedInsight{size: size, newest: newest, insight: ins}
-	m.mu.Unlock()
-	return ins
-}
-
 // scanFolder merges the packages inside a mod folder. A folder of thousands of
 // packages keeps the first 64; the row only needs a kind and a picture.
 func (m *ModsService) scanFolder(dir string) *packageInsight {
@@ -449,7 +433,7 @@ func (m *ModsService) scanFolder(dir string) *packageInsight {
 		if err != nil {
 			return nil
 		}
-		mergeInsight(merged, m.insightForFile(p, info.Size(), info.ModTime()))
+		mergeInsight(merged, m.insightForPath(p, info.Size(), info.ModTime()))
 		return nil
 	})
 	if merged.Resources == 0 && hasScript {
