@@ -98,7 +98,7 @@ export function PickGameFolder(): $CancellablePromise<models$0.GameFolder> {
 }
 
 /**
- * Reveal opens a folder in File Explorer.
+ * Reveal opens a folder in File Explorer, or the folder holding a file.
  */
 export function Reveal(path: string): $CancellablePromise<void> {
     return $Call.ByID(2617087872, path);

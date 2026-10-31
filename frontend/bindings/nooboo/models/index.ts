@@ -11,6 +11,7 @@ export {
     Kind,
     Mod,
     Progress,
+    Quarantine,
     Storage,
     Suspect,
     TidyMove,

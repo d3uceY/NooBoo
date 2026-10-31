@@ -55,11 +55,36 @@ export function List(): $CancellablePromise<models$0.Backup[]> {
 }
 
 /**
+ * OpenQuarantineWindow opens the set-aside list in its own window. A second
+ * call focuses that window.
+ */
+export function OpenQuarantineWindow(): $CancellablePromise<void> {
+    return $Call.ByID(3653452685);
+}
+
+/**
+ * Quarantine lists what restores and mod removals parked, newest first.
+ */
+export function Quarantine(): $CancellablePromise<models$0.Quarantine[]> {
+    return $Call.ByID(1036372905).then(($result: any) => {
+        return $$createType3($result);
+    });
+}
+
+/**
  * Restore puts a snapshot back. Live folders are moved aside first, never deleted,
  * so a restore taken by mistake is still recoverable.
  */
 export function Restore(id: string): $CancellablePromise<void> {
     return $Call.ByID(855866585, id);
+}
+
+/**
+ * RestoreQuarantine puts one parked folder back. The live files it replaces are
+ * parked first, then the entry it came from is deleted.
+ */
+export function RestoreQuarantine(id: string): $CancellablePromise<void> {
+    return $Call.ByID(2156908429, id);
 }
 
 /**
@@ -70,15 +95,24 @@ export function Reveal(): $CancellablePromise<void> {
 }
 
 /**
+ * RevealQuarantine opens the set-aside folder.
+ */
+export function RevealQuarantine(): $CancellablePromise<void> {
+    return $Call.ByID(3030273352);
+}
+
+/**
  * Storage reports what the app's folders cost, so the player can see growth.
  */
 export function Storage(): $CancellablePromise<models$0.Storage> {
     return $Call.ByID(3953940014).then(($result: any) => {
-        return $$createType2($result);
+        return $$createType4($result);
     });
 }
 
 // Private type creation functions
 const $$createType0 = models$0.Backup.createFrom;
 const $$createType1 = $Create.Array($$createType0);
-const $$createType2 = models$0.Storage.createFrom;
+const $$createType2 = models$0.Quarantine.createFrom;
+const $$createType3 = $Create.Array($$createType2);
+const $$createType4 = models$0.Storage.createFrom;

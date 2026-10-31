@@ -344,6 +344,46 @@ export class Progress {
 }
 
 /**
+ * Quarantine is one parked folder. Parts names what it holds.
+ */
+export class Quarantine {
+    "id": string;
+    "parts": string[];
+    "files": number;
+    "size": number;
+
+    /** Creates a new Quarantine instance. */
+    constructor($$source: Partial<Quarantine> = {}) {
+        if (!("id" in $$source)) {
+            this["id"] = "";
+        }
+        if (!("parts" in $$source)) {
+            this["parts"] = [];
+        }
+        if (!("files" in $$source)) {
+            this["files"] = 0;
+        }
+        if (!("size" in $$source)) {
+            this["size"] = 0;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new Quarantine instance from a string or object.
+     */
+    static createFrom($$source: any = {}): Quarantine {
+        const $$createField1_0 = $$createType0;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("parts" in $$parsedSource) {
+            $$parsedSource["parts"] = $$createField1_0($$parsedSource["parts"]);
+        }
+        return new Quarantine($$parsedSource as Partial<Quarantine>);
+    }
+}
+
+/**
  * Storage is what the app's own folders cost on disk. Partial counts
  * half-written snapshots left by a crash, which are never listed.
  */
