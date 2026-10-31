@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"nooboo/models"
@@ -50,6 +51,14 @@ func (c *ConfigService) OpenRelease(url string) error {
 	return application.Get().Browser.OpenURL(url)
 }
 
+// OpenLink opens an advisory link. Only https is accepted.
+func (c *ConfigService) OpenLink(url string) error {
+	if !strings.HasPrefix(url, "https://") {
+		return errors.New("refusing to open an unknown link")
+	}
+	return application.Get().Browser.OpenURL(url)
+}
+
 func (c *ConfigService) configPath() string { return filepath.Join(c.base, "config.json") }
 
 // Get returns settings, falling back to defaults when the file is absent or corrupt.
@@ -77,22 +86,105 @@ func (c *ConfigService) save(cfg models.Config) error {
 }
 
 // DetectGameRoot returns the default Sims 4 folder, or "" when it is not there.
-// Documents is often redirected into OneDrive, so that path is checked too.
 func (c *ConfigService) DetectGameRoot() string {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return ""
 	}
-	for _, documents := range []string{
-		filepath.Join(home, "Documents"),
-		filepath.Join(home, "OneDrive", "Documents"),
-	} {
+	return gameRootUnder(home)
+}
+
+// gameRootUnder checks every Documents a machine may use, including the fake
+// Windows home inside a Wine/Proton prefix on Linux and the Steam Deck.
+func gameRootUnder(home string) string {
+	for _, documents := range documentsDirs(home) {
 		p := filepath.Join(documents, "Electronic Arts", "The Sims 4")
-		if info, err := os.Stat(p); err == nil && info.IsDir() {
+		if inspect(p).Valid {
 			return p
 		}
 	}
 	return ""
+}
+
+func documentsDirs(home string) []string {
+	dirs := []string{
+		filepath.Join(home, "Documents"),
+		filepath.Join(home, "OneDrive", "Documents"),
+	}
+	dirs = append(dirs, steamDocumentsDirs(home)...)
+	return append(dirs, prefixDocumentsDirs(home)...)
+}
+
+// steamRoots are the client folders a Linux install can live in.
+func steamRoots(home string) []string {
+	return []string{
+		filepath.Join(home, ".steam", "steam"),
+		filepath.Join(home, ".local", "share", "Steam"),
+		filepath.Join(home, ".var", "app", "com.valvesoftware.Steam", ".local", "share", "Steam"),
+	}
+}
+
+var vdfLibraryPath = regexp.MustCompile(`"path"\s+"([^"]+)"`)
+
+// steamLibraries reads libraryfolders.vdf so a second library on another drive
+// is not missed. An unreadable file costs only itself.
+func steamLibraries(home string) []string {
+	seen := map[string]bool{}
+	var out []string
+	add := func(p string) {
+		p = filepath.Clean(p)
+		if seen[p] {
+			return
+		}
+		if info, err := os.Stat(p); err == nil && info.IsDir() {
+			seen[p] = true
+			out = append(out, p)
+		}
+	}
+	for _, root := range steamRoots(home) {
+		add(root)
+		for _, vdf := range []string{
+			filepath.Join(root, "config", "libraryfolders.vdf"),
+			filepath.Join(root, "steamapps", "libraryfolders.vdf"),
+		} {
+			b, err := os.ReadFile(vdf)
+			if err != nil {
+				continue
+			}
+			for _, m := range vdfLibraryPath.FindAllStringSubmatch(string(b), -1) {
+				add(m[1])
+			}
+		}
+	}
+	return out
+}
+
+func steamDocumentsDirs(home string) []string {
+	var out []string
+	for _, lib := range steamLibraries(home) {
+		matches, _ := filepath.Glob(filepath.Join(lib, "steamapps", "compatdata", "*", "pfx", "drive_c", "users", "*", "Documents"))
+		out = append(out, matches...)
+	}
+	return out
+}
+
+// prefixDocumentsDirs covers Heroic, Lutris and plain Wine prefixes.
+func prefixDocumentsDirs(home string) []string {
+	patterns := []string{
+		filepath.Join(home, ".config", "heroic", "prefixes", "*", "drive_c", "users", "*", "Documents"),
+		filepath.Join(home, ".config", "heroic", "prefixes", "*", "pfx", "drive_c", "users", "*", "Documents"),
+		filepath.Join(home, ".var", "app", "com.heroicgameslauncher.hgl", "config", "heroic", "prefixes", "*", "drive_c", "users", "*", "Documents"),
+		filepath.Join(home, ".var", "app", "com.heroicgameslauncher.hgl", "config", "heroic", "prefixes", "*", "pfx", "drive_c", "users", "*", "Documents"),
+		filepath.Join(home, "Games", "Heroic", "Prefixes", "default", "*", "drive_c", "users", "*", "Documents"),
+		filepath.Join(home, "Games", "*", "drive_c", "users", "*", "Documents"),
+		filepath.Join(home, ".wine", "drive_c", "users", "*", "Documents"),
+	}
+	var out []string
+	for _, pattern := range patterns {
+		matches, _ := filepath.Glob(pattern)
+		out = append(out, matches...)
+	}
+	return out
 }
 
 // GameFolder inspects a folder and reports whether it is a Sims 4 user folder.
