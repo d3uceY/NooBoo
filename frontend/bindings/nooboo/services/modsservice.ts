@@ -15,6 +15,13 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 import * as models$0 from "../models/models.js";
 
 /**
+ * AddTag stores one label for a mod.
+ */
+export function AddTag(id: string, tag: string): $CancellablePromise<void> {
+    return $Call.ByID(4244046263, id, tag);
+}
+
+/**
  * Delete sets a mod aside in quarantine, so removing the wrong thing is
  * recoverable and lands in the folder the player can already empty.
  */
@@ -23,12 +30,39 @@ export function Delete(id: string): $CancellablePromise<void> {
 }
 
 /**
+ * FindDuplicates hashes only files that share a size with another file.
+ * It runs on demand because a whole library is a lot of reading.
+ */
+export function FindDuplicates(): $CancellablePromise<models$0.DuplicateSet[]> {
+    return $Call.ByID(983043831).then(($result: any) => {
+        return $$createType1($result);
+    });
+}
+
+/**
+ * IgnoreConflict remembers one pair so a deliberate override stops warning.
+ */
+export function IgnoreConflict(a: string, b: string): $CancellablePromise<void> {
+    return $Call.ByID(4269122598, a, b);
+}
+
+/**
  * Install copies a download into place, from a file or a whole folder. Mods get
  * their own folder; custom content is grouped under the creator.
  */
 export function Install(req: models$0.InstallRequest): $CancellablePromise<models$0.Mod> {
     return $Call.ByID(1261860985, req).then(($result: any) => {
-        return $$createType0($result);
+        return $$createType2($result);
+    });
+}
+
+/**
+ * InstallDownload routes a download by what it contains: a tray set goes to
+ * Tray, everything else through Install.
+ */
+export function InstallDownload(req: models$0.InstallRequest): $CancellablePromise<models$0.InstallResult> {
+    return $Call.ByID(965627877, req).then(($result: any) => {
+        return $$createType3($result);
     });
 }
 
@@ -48,13 +82,27 @@ export function PickFolder(): $CancellablePromise<string> {
 }
 
 /**
+ * RemoveTag drops one label from a mod.
+ */
+export function RemoveTag(id: string, tag: string): $CancellablePromise<void> {
+    return $Call.ByID(3039700766, id, tag);
+}
+
+/**
  * Scan lists everything under Mods, one entry per installable folder.
  * No folder set yet reads as an empty library, not an error.
  */
 export function Scan(): $CancellablePromise<models$0.Mod[]> {
     return $Call.ByID(649195407).then(($result: any) => {
-        return $$createType1($result);
+        return $$createType4($result);
     });
+}
+
+/**
+ * SetAsideFile moves one copy into quarantine and tidies the empty folder.
+ */
+export function SetAsideFile(rel: string): $CancellablePromise<void> {
+    return $Call.ByID(2196062092, rel);
 }
 
 /**
@@ -62,6 +110,13 @@ export function Scan(): $CancellablePromise<models$0.Mod[]> {
  */
 export function SetEnabled(ids: string[], enabled: boolean): $CancellablePromise<void> {
     return $Call.ByID(2661027863, ids, enabled);
+}
+
+/**
+ * Thumbnail returns a data URL for one row, or "" when the package has none.
+ */
+export function Thumbnail(id: string): $CancellablePromise<string> {
+    return $Call.ByID(3684239842, id);
 }
 
 /**
@@ -73,11 +128,14 @@ export function SetEnabled(ids: string[], enabled: boolean): $CancellablePromise
  */
 export function Tidy(): $CancellablePromise<models$0.TidyResult> {
     return $Call.ByID(1151939098).then(($result: any) => {
-        return $$createType2($result);
+        return $$createType5($result);
     });
 }
 
 // Private type creation functions
-const $$createType0 = models$0.Mod.createFrom;
+const $$createType0 = models$0.DuplicateSet.createFrom;
 const $$createType1 = $Create.Array($$createType0);
-const $$createType2 = models$0.TidyResult.createFrom;
+const $$createType2 = models$0.Mod.createFrom;
+const $$createType3 = models$0.InstallResult.createFrom;
+const $$createType4 = $Create.Array($$createType2);
+const $$createType5 = models$0.TidyResult.createFrom;

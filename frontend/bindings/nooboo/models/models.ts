@@ -6,6 +6,46 @@
 import { Create as $Create } from "@wailsio/runtime";
 
 /**
+ * AdvisoryRef is one published warning about a mod.
+ */
+export class AdvisoryRef {
+    "title": string;
+    "status": string;
+    "since": string;
+    "note": string;
+    "url": string;
+
+    /** Creates a new AdvisoryRef instance. */
+    constructor($$source: Partial<AdvisoryRef> = {}) {
+        if (!("title" in $$source)) {
+            this["title"] = "";
+        }
+        if (!("status" in $$source)) {
+            this["status"] = "";
+        }
+        if (!("since" in $$source)) {
+            this["since"] = "";
+        }
+        if (!("note" in $$source)) {
+            this["note"] = "";
+        }
+        if (!("url" in $$source)) {
+            this["url"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new AdvisoryRef instance from a string or object.
+     */
+    static createFrom($$source: any = {}): AdvisoryRef {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new AdvisoryRef($$parsedSource as Partial<AdvisoryRef>);
+    }
+}
+
+/**
  * AppInfo is the build's version and where to point the user for releases.
  */
 export class AppInfo {
@@ -75,6 +115,9 @@ export class Backup {
 export class Config {
     "gameRoot": string;
     "keepLast": number;
+    "installRoot": string;
+    "tags": { [_ in string]?: string[] };
+    "ignoredConflicts": string[];
 
     /** Creates a new Config instance. */
     constructor($$source: Partial<Config> = {}) {
@@ -84,6 +127,15 @@ export class Config {
         if (!("keepLast" in $$source)) {
             this["keepLast"] = 0;
         }
+        if (!("installRoot" in $$source)) {
+            this["installRoot"] = "";
+        }
+        if (!("tags" in $$source)) {
+            this["tags"] = {};
+        }
+        if (!("ignoredConflicts" in $$source)) {
+            this["ignoredConflicts"] = [];
+        }
 
         Object.assign(this, $$source);
     }
@@ -92,8 +144,112 @@ export class Config {
      * Creates a new Config instance from a string or object.
      */
     static createFrom($$source: any = {}): Config {
+        const $$createField3_0 = $$createType1;
+        const $$createField4_0 = $$createType0;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("tags" in $$parsedSource) {
+            $$parsedSource["tags"] = $$createField3_0($$parsedSource["tags"]);
+        }
+        if ("ignoredConflicts" in $$parsedSource) {
+            $$parsedSource["ignoredConflicts"] = $$createField4_0($$parsedSource["ignoredConflicts"]);
+        }
         return new Config($$parsedSource as Partial<Config>);
+    }
+}
+
+/**
+ * ConflictRef names one other mod and why it clashes.
+ */
+export class ConflictRef {
+    "id": string;
+    "reason": string;
+
+    /** Creates a new ConflictRef instance. */
+    constructor($$source: Partial<ConflictRef> = {}) {
+        if (!("id" in $$source)) {
+            this["id"] = "";
+        }
+        if (!("reason" in $$source)) {
+            this["reason"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ConflictRef instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ConflictRef {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new ConflictRef($$parsedSource as Partial<ConflictRef>);
+    }
+}
+
+/**
+ * DuplicateFile is one copy of the same bytes.
+ */
+export class DuplicateFile {
+    "file": string;
+    "size": number;
+
+    /** Creates a new DuplicateFile instance. */
+    constructor($$source: Partial<DuplicateFile> = {}) {
+        if (!("file" in $$source)) {
+            this["file"] = "";
+        }
+        if (!("size" in $$source)) {
+            this["size"] = 0;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new DuplicateFile instance from a string or object.
+     */
+    static createFrom($$source: any = {}): DuplicateFile {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new DuplicateFile($$parsedSource as Partial<DuplicateFile>);
+    }
+}
+
+/**
+ * DuplicateSet is every copy of one file, biggest saving first.
+ */
+export class DuplicateSet {
+    "digest": string;
+    "size": number;
+    "wasted": number;
+    "files": DuplicateFile[];
+
+    /** Creates a new DuplicateSet instance. */
+    constructor($$source: Partial<DuplicateSet> = {}) {
+        if (!("digest" in $$source)) {
+            this["digest"] = "";
+        }
+        if (!("size" in $$source)) {
+            this["size"] = 0;
+        }
+        if (!("wasted" in $$source)) {
+            this["wasted"] = 0;
+        }
+        if (!("files" in $$source)) {
+            this["files"] = [];
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new DuplicateSet instance from a string or object.
+     */
+    static createFrom($$source: any = {}): DuplicateSet {
+        const $$createField3_0 = $$createType3;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("files" in $$parsedSource) {
+            $$parsedSource["files"] = $$createField3_0($$parsedSource["files"]);
+        }
+        return new DuplicateSet($$parsedSource as Partial<DuplicateSet>);
     }
 }
 
@@ -142,7 +298,7 @@ export class Exception {
      */
     static createFrom($$source: any = {}): Exception {
         const $$createField5_0 = $$createType0;
-        const $$createField6_0 = $$createType2;
+        const $$createField6_0 = $$createType5;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("trace" in $$parsedSource) {
             $$parsedSource["trace"] = $$createField5_0($$parsedSource["trace"]);
@@ -235,6 +391,44 @@ export class InstallRequest {
 }
 
 /**
+ * InstallResult says which folder a download went to.
+ */
+export class InstallResult {
+    "target": string;
+    "name": string;
+    "mod"?: Mod | null;
+    "tray"?: TrayItem | null;
+
+    /** Creates a new InstallResult instance. */
+    constructor($$source: Partial<InstallResult> = {}) {
+        if (!("target" in $$source)) {
+            this["target"] = "";
+        }
+        if (!("name" in $$source)) {
+            this["name"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new InstallResult instance from a string or object.
+     */
+    static createFrom($$source: any = {}): InstallResult {
+        const $$createField2_0 = $$createType7;
+        const $$createField3_0 = $$createType9;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("mod" in $$parsedSource) {
+            $$parsedSource["mod"] = $$createField2_0($$parsedSource["mod"]);
+        }
+        if ("tray" in $$parsedSource) {
+            $$parsedSource["tray"] = $$createField3_0($$parsedSource["tray"]);
+        }
+        return new InstallResult($$parsedSource as Partial<InstallResult>);
+    }
+}
+
+/**
  * Kind separates plain mods from custom content so installs land in the right place.
  */
 export enum Kind {
@@ -260,6 +454,12 @@ export class Mod {
     "size": number;
     "modified": string;
     "files": string[];
+    "category": string;
+    "resourceCount": number;
+    "hasThumb": boolean;
+    "conflicts": ConflictRef[];
+    "advisory"?: AdvisoryRef | null;
+    "tags": string[];
 
     /** Creates a new Mod instance. */
     constructor($$source: Partial<Mod> = {}) {
@@ -290,6 +490,21 @@ export class Mod {
         if (!("files" in $$source)) {
             this["files"] = [];
         }
+        if (!("category" in $$source)) {
+            this["category"] = "";
+        }
+        if (!("resourceCount" in $$source)) {
+            this["resourceCount"] = 0;
+        }
+        if (!("hasThumb" in $$source)) {
+            this["hasThumb"] = false;
+        }
+        if (!("conflicts" in $$source)) {
+            this["conflicts"] = [];
+        }
+        if (!("tags" in $$source)) {
+            this["tags"] = [];
+        }
 
         Object.assign(this, $$source);
     }
@@ -299,11 +514,59 @@ export class Mod {
      */
     static createFrom($$source: any = {}): Mod {
         const $$createField8_0 = $$createType0;
+        const $$createField12_0 = $$createType11;
+        const $$createField13_0 = $$createType13;
+        const $$createField14_0 = $$createType0;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("files" in $$parsedSource) {
             $$parsedSource["files"] = $$createField8_0($$parsedSource["files"]);
         }
+        if ("conflicts" in $$parsedSource) {
+            $$parsedSource["conflicts"] = $$createField12_0($$parsedSource["conflicts"]);
+        }
+        if ("advisory" in $$parsedSource) {
+            $$parsedSource["advisory"] = $$createField13_0($$parsedSource["advisory"]);
+        }
+        if ("tags" in $$parsedSource) {
+            $$parsedSource["tags"] = $$createField14_0($$parsedSource["tags"]);
+        }
         return new Mod($$parsedSource as Partial<Mod>);
+    }
+}
+
+/**
+ * Pack is one expansion, game pack, stuff pack or kit.
+ */
+export class Pack {
+    "code": string;
+    "name": string;
+    "kind": string;
+    "enabled": boolean;
+
+    /** Creates a new Pack instance. */
+    constructor($$source: Partial<Pack> = {}) {
+        if (!("code" in $$source)) {
+            this["code"] = "";
+        }
+        if (!("name" in $$source)) {
+            this["name"] = "";
+        }
+        if (!("kind" in $$source)) {
+            this["kind"] = "";
+        }
+        if (!("enabled" in $$source)) {
+            this["enabled"] = false;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new Pack instance from a string or object.
+     */
+    static createFrom($$source: any = {}): Pack {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new Pack($$parsedSource as Partial<Pack>);
     }
 }
 
@@ -520,7 +783,7 @@ export class TidyResult {
      * Creates a new TidyResult instance from a string or object.
      */
     static createFrom($$source: any = {}): TidyResult {
-        const $$createField0_0 = $$createType4;
+        const $$createField0_0 = $$createType15;
         const $$createField2_0 = $$createType0;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("moved" in $$parsedSource) {
@@ -530,6 +793,66 @@ export class TidyResult {
             $$parsedSource["skipped"] = $$createField2_0($$parsedSource["skipped"]);
         }
         return new TidyResult($$parsedSource as Partial<TidyResult>);
+    }
+}
+
+/**
+ * TrayItem is one downloaded lot, room or household set in Tray.
+ */
+export class TrayItem {
+    "id": string;
+    "name": string;
+    "kind": string;
+    "creator": string;
+    "size": number;
+    "modified": string;
+    "thumb": string;
+    "files": string[];
+    "path": string;
+
+    /** Creates a new TrayItem instance. */
+    constructor($$source: Partial<TrayItem> = {}) {
+        if (!("id" in $$source)) {
+            this["id"] = "";
+        }
+        if (!("name" in $$source)) {
+            this["name"] = "";
+        }
+        if (!("kind" in $$source)) {
+            this["kind"] = "";
+        }
+        if (!("creator" in $$source)) {
+            this["creator"] = "";
+        }
+        if (!("size" in $$source)) {
+            this["size"] = 0;
+        }
+        if (!("modified" in $$source)) {
+            this["modified"] = "";
+        }
+        if (!("thumb" in $$source)) {
+            this["thumb"] = "";
+        }
+        if (!("files" in $$source)) {
+            this["files"] = [];
+        }
+        if (!("path" in $$source)) {
+            this["path"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new TrayItem instance from a string or object.
+     */
+    static createFrom($$source: any = {}): TrayItem {
+        const $$createField7_0 = $$createType0;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("files" in $$parsedSource) {
+            $$parsedSource["files"] = $$createField7_0($$parsedSource["files"]);
+        }
+        return new TrayItem($$parsedSource as Partial<TrayItem>);
     }
 }
 
@@ -575,7 +898,18 @@ export class UpdateInfo {
 
 // Private type creation functions
 const $$createType0 = $Create.Array($Create.Any);
-const $$createType1 = Suspect.createFrom;
-const $$createType2 = $Create.Array($$createType1);
-const $$createType3 = TidyMove.createFrom;
-const $$createType4 = $Create.Array($$createType3);
+const $$createType1 = $Create.Map($Create.Any, $$createType0);
+const $$createType2 = DuplicateFile.createFrom;
+const $$createType3 = $Create.Array($$createType2);
+const $$createType4 = Suspect.createFrom;
+const $$createType5 = $Create.Array($$createType4);
+const $$createType6 = Mod.createFrom;
+const $$createType7 = $Create.Nullable($$createType6);
+const $$createType8 = TrayItem.createFrom;
+const $$createType9 = $Create.Nullable($$createType8);
+const $$createType10 = ConflictRef.createFrom;
+const $$createType11 = $Create.Array($$createType10);
+const $$createType12 = AdvisoryRef.createFrom;
+const $$createType13 = $Create.Nullable($$createType12);
+const $$createType14 = TidyMove.createFrom;
+const $$createType15 = $Create.Array($$createType14);

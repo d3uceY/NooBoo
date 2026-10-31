@@ -41,7 +41,6 @@ export function Current(): $CancellablePromise<models$0.GameFolder> {
 
 /**
  * DetectGameRoot returns the default Sims 4 folder, or "" when it is not there.
- * Documents is often redirected into OneDrive, so that path is checked too.
  */
 export function DetectGameRoot(): $CancellablePromise<string> {
     return $Call.ByID(3842067112);
@@ -74,6 +73,13 @@ export function KeepLast(): $CancellablePromise<number> {
 }
 
 /**
+ * OpenLink opens an advisory link. Only https is accepted.
+ */
+export function OpenLink(url: string): $CancellablePromise<void> {
+    return $Call.ByID(3673398029, url);
+}
+
+/**
  * OpenRelease opens a release page. Empty means the latest one. Anything
  * outside this repo is refused, since the URL comes back over the bridge.
  */
@@ -95,6 +101,13 @@ export function PickGameFolder(): $CancellablePromise<models$0.GameFolder> {
     return $Call.ByID(3211829794).then(($result: any) => {
         return $$createType1($result);
     });
+}
+
+/**
+ * PickInstallFolder asks for the install and remembers it when it is real.
+ */
+export function PickInstallFolder(): $CancellablePromise<string> {
+    return $Call.ByID(1134224831);
 }
 
 /**

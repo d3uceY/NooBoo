@@ -10,8 +10,11 @@ const (
 
 // Config is the whole on-disk settings file. Missing file means defaults.
 type Config struct {
-	GameRoot string `json:"gameRoot"`
-	KeepLast int    `json:"keepLast"`
+	GameRoot         string              `json:"gameRoot"`
+	KeepLast         int                 `json:"keepLast"`
+	InstallRoot      string              `json:"installRoot"`
+	Tags             map[string][]string `json:"tags"`
+	IgnoredConflicts []string            `json:"ignoredConflicts"`
 }
 
 // GameFolder is the result of validating a folder the user picked.
@@ -26,15 +29,58 @@ type GameFolder struct {
 
 // Mod is one installable unit: a folder under Mods, or a loose file.
 type Mod struct {
-	ID       string   `json:"id"`
-	Name     string   `json:"name"`
-	Creator  string   `json:"creator"`
-	Kind     Kind     `json:"kind"`
-	Enabled  bool     `json:"enabled"`
-	Path     string   `json:"path"`
-	Size     int64    `json:"size"`
-	Modified string   `json:"modified"`
-	Files    []string `json:"files"`
+	ID            string        `json:"id"`
+	Name          string        `json:"name"`
+	Creator       string        `json:"creator"`
+	Kind          Kind          `json:"kind"`
+	Enabled       bool          `json:"enabled"`
+	Path          string        `json:"path"`
+	Size          int64         `json:"size"`
+	Modified      string        `json:"modified"`
+	Files         []string      `json:"files"`
+	Category      string        `json:"category"`
+	ResourceCount int           `json:"resourceCount"`
+	HasThumb      bool          `json:"hasThumb"`
+	Conflicts     []ConflictRef `json:"conflicts"`
+	Advisory      *AdvisoryRef  `json:"advisory,omitempty"`
+	Tags          []string      `json:"tags"`
+}
+
+// ConflictRef names one other mod and why it clashes.
+type ConflictRef struct {
+	ID     string `json:"id"`
+	Reason string `json:"reason"`
+}
+
+// AdvisoryRef is one published warning about a mod.
+type AdvisoryRef struct {
+	Title  string `json:"title"`
+	Status string `json:"status"`
+	Since  string `json:"since"`
+	Note   string `json:"note"`
+	URL    string `json:"url"`
+}
+
+// DuplicateFile is one copy of the same bytes.
+type DuplicateFile struct {
+	File string `json:"file"`
+	Size int64  `json:"size"`
+}
+
+// DuplicateSet is every copy of one file, biggest saving first.
+type DuplicateSet struct {
+	Digest string          `json:"digest"`
+	Size   int64           `json:"size"`
+	Wasted int64           `json:"wasted"`
+	Files  []DuplicateFile `json:"files"`
+}
+
+// Pack is one expansion, game pack, stuff pack or kit.
+type Pack struct {
+	Code    string `json:"code"`
+	Name    string `json:"name"`
+	Kind    string `json:"kind"`
+	Enabled bool   `json:"enabled"`
 }
 
 // Backup is one snapshot of saves + Tray.
@@ -127,4 +173,25 @@ type InstallRequest struct {
 	Name    string `json:"name"`
 	Creator string `json:"creator"`
 	Kind    Kind   `json:"kind"`
+}
+
+// TrayItem is one downloaded lot, room or household set in Tray.
+type TrayItem struct {
+	ID       string   `json:"id"`
+	Name     string   `json:"name"`
+	Kind     string   `json:"kind"`
+	Creator  string   `json:"creator"`
+	Size     int64    `json:"size"`
+	Modified string   `json:"modified"`
+	Thumb    string   `json:"thumb"`
+	Files    []string `json:"files"`
+	Path     string   `json:"path"`
+}
+
+// InstallResult says which folder a download went to.
+type InstallResult struct {
+	Target string    `json:"target"`
+	Name   string    `json:"name"`
+	Mod    *Mod      `json:"mod,omitempty"`
+	Tray   *TrayItem `json:"tray,omitempty"`
 }
