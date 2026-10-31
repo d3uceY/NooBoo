@@ -302,8 +302,9 @@ func (b *BackupService) RestoreQuarantine(id string) error {
 	}
 
 	// Sort first, refuse before touching anything: a mod already in Mods wins.
-	// Loose files are skipped, since neither saves nor Mods has a slot for one.
+	// A "files" part is the duplicate finder's tree; it is checked separately.
 	saves, mods := []string{}, []string{}
+	loose := false
 	for _, s := range subs {
 		if !s.IsDir() {
 			continue
@@ -312,17 +313,27 @@ func (b *BackupService) RestoreQuarantine(id string) error {
 			saves = append(saves, s.Name())
 			continue
 		}
+		if s.Name() == "files" {
+			loose = true
+			continue
+		}
 		if fileExists(filepath.Join(root, "Mods", s.Name())) {
 			return fmt.Errorf("%s is already in Mods", s.Name())
 		}
 		mods = append(mods, s.Name())
 	}
-	if len(saves)+len(mods) == 0 {
+	if len(saves)+len(mods) == 0 && !loose {
 		return errors.New("nothing to put back")
 	}
 
 	if len(saves) > 0 {
 		if _, err := b.park(root, saves); err != nil {
+			return err
+		}
+	}
+
+	if loose {
+		if err := restoreLooseFiles(filepath.Join(src, "files"), filepath.Join(root, "Mods")); err != nil {
 			return err
 		}
 	}
@@ -343,6 +354,40 @@ func (b *BackupService) RestoreQuarantine(id string) error {
 	}
 	emit("done", 1, 1, "Put back")
 	emitQuarantine()
+	return nil
+}
+
+// restoreLooseFiles puts files parked by the duplicate finder back under Mods.
+// Every destination is checked before anything moves.
+func restoreLooseFiles(src, modsRoot string) error {
+	var files []string
+	err := filepath.WalkDir(src, func(p string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !d.IsDir() {
+			files = append(files, p)
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	for _, p := range files {
+		rel, err := filepath.Rel(src, p)
+		if err != nil {
+			return err
+		}
+		if fileExists(filepath.Join(modsRoot, rel)) {
+			return fmt.Errorf("%s is already in Mods", filepath.ToSlash(rel))
+		}
+	}
+	for _, p := range files {
+		rel, _ := filepath.Rel(src, p)
+		if err := movePath(p, filepath.Join(modsRoot, rel)); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -368,8 +413,8 @@ func (b *BackupService) OpenQuarantineWindow() error {
 		MaxHeight:             420,
 		MaximiseButtonState:   application.ButtonDisabled,
 		FullscreenButtonState: application.ButtonDisabled,
-		BackgroundColour: application.NewRGB(226, 241, 250),
-		URL:              "/?view=quarantine",
+		BackgroundColour:      application.NewRGB(226, 241, 250),
+		URL:                   "/?view=quarantine",
 	})
 	w.OnWindowEvent(events.Common.WindowClosing, func(*application.WindowEvent) {
 		b.setAside = nil
