@@ -3,9 +3,20 @@ import { api } from '../lib/api'
 import type { Kind } from '../lib/api'
 import { Art, Button, Field, Panel, PanelHeader } from '../ui'
 
-export default function Install({ onDone }: { onDone: () => Promise<void> }) {
-  const [source, setSource] = useState('')
-  const [name, setName] = useState('')
+function seedName(path: string): string {
+  const base = path.split(/[\\/]/).filter(Boolean).pop() ?? ''
+  return base.replace(/\.(package|ts4script|zip)$/i, '')
+}
+
+export default function Install({
+  onDone,
+  seed,
+}: {
+  onDone: () => Promise<void>
+  seed: { path: string; at: number } | null
+}) {
+  const [source, setSource] = useState(seed?.path ?? '')
+  const [name, setName] = useState(seed ? seedName(seed.path) : '')
   const [creator, setCreator] = useState('')
   const [kind, setKind] = useState<Kind>('mod')
   const [backup, setBackup] = useState(true)
@@ -13,15 +24,18 @@ export default function Install({ onDone }: { onDone: () => Promise<void> }) {
   const [error, setError] = useState('')
   const [done, setDone] = useState('')
 
+  const adopt = (path: string) => {
+    setSource(path)
+    setName(seedName(path))
+  }
+
   const pick = async (kindOfPick: 'file' | 'folder') => {
     setError('')
     setDone('')
     try {
       const picked = kindOfPick === 'file' ? await api.pickFile() : await api.pickFolder()
       if (!picked) return
-      setSource(picked)
-      const base = picked.split(/[\\/]/).filter(Boolean).pop() ?? ''
-      setName(base.replace(/\.(package|ts4script|zip)$/i, ''))
+      adopt(picked)
     } catch (e) {
       setError(message(e))
     }
@@ -33,8 +47,8 @@ export default function Install({ onDone }: { onDone: () => Promise<void> }) {
     setDone('')
     try {
       if (backup) await api.backupNow()
-      const mod = await api.install({ source, name, creator, kind })
-      setDone(`Installed ${mod.name}`)
+      const res = await api.install({ source, name, creator, kind })
+      setDone(res.target === 'tray' ? `Added ${res.name} to Tray` : `Installed ${res.name}`)
       setSource('')
       setName('')
       setCreator('')
@@ -47,9 +61,10 @@ export default function Install({ onDone }: { onDone: () => Promise<void> }) {
   }
 
   return (
-    <Panel className="w-[min(560px,100%)]">
-      <PanelHeader title="Add a file" hint=".package, .ts4script, .zip or a folder" />
-      <div className="space-y-4 px-4 py-4">
+    <div data-file-drop-target>
+      <Panel className="w-[min(560px,100%)]">
+        <PanelHeader title="Add a file" hint=".package, .ts4script, .zip, or drop one here" />
+        <div className="space-y-4 px-4 py-4">
         <div>
           <span className="mb-1 block text-[11px] font-semibold text-ink-soft">File or folder</span>
           <div className="flex items-center gap-2">
@@ -102,7 +117,8 @@ export default function Install({ onDone }: { onDone: () => Promise<void> }) {
           </Button>
         </div>
       </div>
-    </Panel>
+      </Panel>
+    </div>
   )
 }
 

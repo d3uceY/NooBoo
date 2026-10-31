@@ -8,6 +8,7 @@ import (
 	"nooboo/services"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
+	"github.com/wailsapp/wails/v3/pkg/events"
 )
 
 //go:embed all:frontend/dist
@@ -22,6 +23,8 @@ func main() {
 		Services: []application.Service{
 			application.NewService(cfg),
 			application.NewService(services.NewModsService(cfg)),
+			application.NewService(services.NewTrayService(cfg)),
+			application.NewService(services.NewPackService(cfg)),
 			application.NewService(services.NewBackupService(cfg)),
 			application.NewService(services.NewExceptionService(cfg)),
 			application.NewService(services.NewUpdateService()),
@@ -34,23 +37,27 @@ func main() {
 		},
 	})
 
-	 app.Window.NewWithOptions(application.WebviewWindowOptions{
-		Title:                 "NooBoo",
-		Width:                 760,
-		Height:                520,
-		MinWidth:              500,
-		MinHeight:             500,
+	win := app.Window.NewWithOptions(application.WebviewWindowOptions{
+		Title:     "NooBoo",
+		Width:     760,
+		Height:    520,
+		MinWidth:  500,
+		MinHeight: 500,
 		// MaximiseButtonState:   application.ButtonDisabled,
 		// FullscreenButtonState: application.ButtonDisabled,
-		BackgroundColour:      application.NewRGB(226, 241, 250),
-		URL:                   "/",
+		BackgroundColour: application.NewRGB(226, 241, 250),
+		URL:              "/",
+		EnableFileDrop:   true,
+	})
+
+	win.OnWindowEvent(events.Common.WindowFilesDropped, func(e *application.WindowEvent) {
+		app.Event.Emit("files-dropped", e.Context().DroppedFiles())
 	})
 
 	if err := app.Run(); err != nil {
 		log.Fatal(err)
 	}
 }
-
 
 // progress is the event the frontend listens on during file work.
 func init() {

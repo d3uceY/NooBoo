@@ -13,7 +13,7 @@ import type { ArtName } from './ui'
 type Screen = 'library' | 'install' | 'backups' | 'troubleshoot' | 'about'
 
 const nav: { id: Screen; label: string; art: ArtName; title: string; hint: string }[] = [
-  { id: 'library', label: 'Library', art: 'library', title: 'Library', hint: 'Everything in your Mods folder' },
+  { id: 'library', label: 'Library', art: 'library', title: 'Library', hint: 'Mods, custom content, Tray and packs' },
   { id: 'install', label: 'Install', art: 'install', title: 'Install', hint: 'Add a downloaded mod or CC file' },
   { id: 'backups', label: 'Backups', art: 'backups', title: 'Backups', hint: 'Saves and Tray snapshots' },
   { id: 'troubleshoot', label: 'Fix', art: 'fix', title: 'Fix', hint: 'Switch mods off to find the broken one' },
@@ -32,6 +32,7 @@ export default function App() {
   const [update, setUpdate] = useState<UpdateInfo | null>(null)
   const [checking, setChecking] = useState(false)
   const [updateOpen, setUpdateOpen] = useState(false)
+  const [installSeed, setInstallSeed] = useState<{ path: string; at: number } | null>(null)
   const askedForUpdate = useRef(false)
   const panel = useRef<HTMLElement>(null)
 
@@ -55,6 +56,15 @@ export default function App() {
   }, [refresh])
 
   useEffect(() => api.onProgress(setProgress), [])
+
+  useEffect(
+    () =>
+      api.onFilesDropped((paths) => {
+        setScreen('install')
+        setInstallSeed({ path: paths[0], at: Date.now() })
+      }),
+    [],
+  )
 
   useEffect(() => {
     void api
@@ -178,7 +188,7 @@ export default function App() {
           </div>
         )}
 
-        <main ref={panel} className="scroll-soft flex-1 overflow-y-auto px-6 pb-4">
+        <main ref={panel} data-file-drop-target className="scroll-soft flex-1 overflow-y-auto px-6 pb-4">
           {folder === null ? (
             <p className="mt-16 text-center text-sm text-ink-soft">Loading…</p>
           ) : !ready && screen !== 'about' ? (
@@ -190,9 +200,10 @@ export default function App() {
               onDelete={removeMod}
               onTidy={tidy}
               onReveal={(p) => void api.reveal(p)}
+              onRefresh={refresh}
             />
           ) : screen === 'install' ? (
-            <Install onDone={refresh} />
+            <Install key={installSeed?.at ?? 'install'} onDone={refresh} seed={installSeed} />
           ) : screen === 'backups' ? (
             <Backups />
           ) : screen === 'about' ? (
