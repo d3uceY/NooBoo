@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from './lib/api'
 import type { GameFolder, Mod, Progress, UpdateInfo } from './lib/api'
+import { message } from './lib/format'
 import { revealScreen } from './lib/motion'
 import About from './screens/About'
 import Backups from './screens/Backups'
@@ -319,7 +320,3 @@ function percent(p: Progress | null): number {
   return Math.min(100, (p.done / p.total) * 100)
 }
 
-function message(e: unknown): string {
-  const text = e instanceof Error ? e.message : String(e)
-  return text.replace(/^Error:\s*/, '')
-}

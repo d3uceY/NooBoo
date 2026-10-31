@@ -18,6 +18,12 @@ export function stamp(id: string): string {
   return `${date} · ${time.replace(/-/g, ':')}`
 }
 
+/** Error text without the repeated "Error:" prefix. */
+export function message(e: unknown): string {
+  const text = e instanceof Error ? e.message : String(e)
+  return text.replace(/^Error:\s*/, '')
+}
+
 /** RFC3339 timestamp as a short local date, or a dash when unknown. */
 export function when(iso: string | undefined): string {
   if (!iso) return '—'

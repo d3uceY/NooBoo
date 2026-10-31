@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { api } from '../lib/api'
 import type { DuplicateSet, Mod, Pack, TidyResult, TrayItem } from '../lib/api'
-import { bytes, when } from '../lib/format'
+import { bytes, message, when } from '../lib/format'
 import { revealRows } from '../lib/motion'
 import { Art, Button, Dialog, Field, Section, Switch } from '../ui'
 
@@ -640,6 +640,30 @@ export default function Library({ mods, onToggle, onDelete, onTidy, onReveal, on
   )
 }
 
+/** Conflict count and advisory flag, shared by the row and the card. */
+function ModBadges({ mod }: { mod: Mod }) {
+  return (
+    <>
+      {mod.conflicts.length > 0 && (
+        <span
+          title={mod.conflicts.map((c) => `${c.id.split('/').pop()}: ${c.reason}`).join('\n')}
+          className="rounded-full bg-[#ffe9e5] px-1.5 py-0.5 text-[10px] font-bold text-danger"
+        >
+          {mod.conflicts.length}
+        </span>
+      )}
+      {mod.advisory && (
+        <span
+          title={mod.advisory.title}
+          className="rounded-full bg-[#fff3cd] px-1.5 py-0.5 text-[10px] font-bold text-[#8a6100]"
+        >
+          !
+        </span>
+      )}
+    </>
+  )
+}
+
 function Row({
   mod,
   busy,
@@ -679,22 +703,7 @@ function Row({
       </span>
       {(mod.conflicts.length > 0 || mod.advisory) && (
         <span className="flex shrink-0 items-center gap-1">
-          {mod.conflicts.length > 0 && (
-            <span
-              title={mod.conflicts.map((c) => `${c.id.split('/').pop()}: ${c.reason}`).join('\n')}
-              className="rounded-full bg-[#ffe9e5] px-1.5 py-0.5 text-[10px] font-bold text-danger"
-            >
-              {mod.conflicts.length}
-            </span>
-          )}
-          {mod.advisory && (
-            <span
-              title={mod.advisory.title}
-              className="rounded-full bg-[#fff3cd] px-1.5 py-0.5 text-[10px] font-bold text-[#8a6100]"
-            >
-              !
-            </span>
-          )}
+          <ModBadges mod={mod} />
         </span>
       )}
       <span className="flex shrink-0 items-center gap-1 opacity-50 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
@@ -783,22 +792,7 @@ function ModCard({
           <span className="rounded bg-panel-dim px-1.5 py-0.5 text-[9px] font-semibold text-ink-soft">
             {mod.category}
           </span>
-          {mod.conflicts.length > 0 && (
-            <span
-              title={mod.conflicts.map((c) => `${c.id.split('/').pop()}: ${c.reason}`).join('\n')}
-              className="rounded-full bg-[#ffe9e5] px-1.5 py-0.5 text-[10px] font-bold text-danger"
-            >
-              {mod.conflicts.length}
-            </span>
-          )}
-          {mod.advisory && (
-            <span
-              title={mod.advisory.title}
-              className="rounded-full bg-[#fff3cd] px-1.5 py-0.5 text-[10px] font-bold text-[#8a6100]"
-            >
-              !
-            </span>
-          )}
+          <ModBadges mod={mod} />
         </span>
         <Switch
           on={mod.enabled}
@@ -939,9 +933,4 @@ function Chip({
       {children}
     </button>
   )
-}
-
-function message(e: unknown): string {
-  const text = e instanceof Error ? e.message : String(e)
-  return text.replace(/^Error:\s*/, '')
 }

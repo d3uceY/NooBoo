@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { api } from '../lib/api'
 import type { Kind } from '../lib/api'
+import { message } from '../lib/format'
 import { Art, Button, Field, Panel, PanelHeader } from '../ui'
 
 function seedName(path: string): string {
@@ -155,9 +156,4 @@ function KindButton({
       </span>
     </button>
   )
-}
-
-function message(e: unknown): string {
-  const text = e instanceof Error ? e.message : String(e)
-  return text.replace(/^Error:\s*/, '')
 }

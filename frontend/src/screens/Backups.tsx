@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api } from '../lib/api'
 import type { Backup, Storage } from '../lib/api'
-import { bytes, stamp } from '../lib/format'
+import { bytes, message, stamp } from '../lib/format'
 import { Art, Button, Dialog, Panel, PanelHeader } from '../ui'
 
 type Pending = { action: 'restore' | 'delete' | 'empty'; id: string }
@@ -229,9 +229,4 @@ function pendingBody(pending: Pending | null): string {
     return 'Removes the folders your earlier restores set aside. Snapshots are not touched.'
   }
   return 'Your current saves and Tray are moved to a quarantine folder first, not deleted.'
-}
-
-function message(e: unknown): string {
-  const text = e instanceof Error ? e.message : String(e)
-  return text.replace(/^Error:\s*/, '')
 }
