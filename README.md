@@ -4,7 +4,7 @@
 
 <h1 align="center">NooBoo</h1>
 
-<p align="center">A Sims 4 mod manager that backs up your saves before it touches anything. Made for my sister.</p>
+<p align="center">A Sims 4 mod manager that backs up your saves before it touches anything. Built for my sis. Probably her taste too.</p>
 
 ![NooBoo library](docs/screenshots/library.png)
 
@@ -25,6 +25,10 @@ Every release ships a `SHA256SUMS.txt`. The app checks for a newer stable releas
 
 **Library.** Mods, CC, Tray creations and installed packs in one place. Real package thumbnails and kinds (CAS, Build Buy, Gameplay, Script), search, sort by name/creator/size/newest, filters, tags, clash badges, and a duplicate finder. Switch off or on, open the folder, or remove. Removed files go to quarantine.
 
+Every package that ships a preview picture shows it, in a row or in grid view.
+
+<img src="docs/screenshots/library-grid.png" alt="Custom content in grid view, each package showing its own thumbnail">
+
 **Install.** Pick a `.package`, `.ts4script`, `.zip`, or folder, or drop it on the window. Files land in `Mods/<name>/` with their folders intact; a lot or household goes to `Tray/`. CC is filed under its creator. Backup is on by default.
 
 **Backups.** Snapshots of `saves` and `Tray`, on demand and before every install. Restoring moves current saves aside. Keeps the last ten (configurable).
@@ -36,7 +40,7 @@ Every release ships a `SHA256SUMS.txt`. The app checks for a newer stable releas
 <table>
 <tr>
 <td><img src="docs/screenshots/backups.png" alt="Backups"></td>
-<td><img src="docs/screenshots/troubleshoot.png" alt="Troubleshoot"></td>
+<td><img src="docs/screenshots/fix.png" alt="Fix"></td>
 </tr>
 </table>
 
